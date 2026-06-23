@@ -7,7 +7,8 @@
   imports = [
     (inputs.den.namespace "aa" true)
     inputs.den.flakeModules.default
-    ./devShell.nix
+    ./aspects
+    ./devShells.nix
   ];
 
   flake = {
@@ -17,9 +18,8 @@
       default = self.flakeModules.allauth;
 
       allauth.imports = [
-        ./options.nix
         ./allauth.nix
-        ./aspects.nix
+        ./aspects
       ];
     };
   };

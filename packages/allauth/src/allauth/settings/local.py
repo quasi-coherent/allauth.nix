@@ -22,13 +22,15 @@ STATICFILES_DIRS = []
 # BASE_DIR points into the read-only venv, so redirect every file log handler to
 # a writable directory.
 _log_dir = os.environ["AA_LOG_DIR"]
-for _handler in LOGGING.get("handlers", {}).values():
+for _handler in LOGGING.get("handlers", {}).values():  # noqa: F405
     if "filename" in _handler:
-        _handler["filename"] = os.path.join(_log_dir, os.path.basename(_handler["filename"]))
+        _handler["filename"] = os.path.join(
+            _log_dir, os.path.basename(_handler["filename"])
+        )
 
 # MySQL over the local socket. The service user created in nixos has socket
 # auth (no password).
-DATABASES["default"] = {
+DATABASES["default"] = {  # noqa: F405
     "ENGINE": "django.db.backends.mysql",
     "NAME": os.environ["AA_DB_NAME"],
     "USER": os.environ["AA_DB_USER"],
@@ -45,7 +47,7 @@ ESI_SSO_CLIENT_SECRET = os.environ["ESI_SSO_CLIENT_SECRET"]
 ESI_USER_CONTACT_EMAIL = os.environ.get("ESI_USER_CONTACT_EMAIL", "")
 
 # Apps contributed by enabled Nix features.
-INSTALLED_APPS += [
+INSTALLED_APPS += [  # noqa: F405
     app for app in os.environ.get("AA_EXTRA_INSTALLED_APPS", "").split(",") if app
 ]
 
@@ -63,7 +65,7 @@ def _cron(expr):
 
 
 for _entry in json.loads(os.environ.get("AA_BEAT_JSON", "[]")):
-    CELERYBEAT_SCHEDULE[_entry["name"]] = {
+    CELERYBEAT_SCHEDULE[_entry["name"]] = {  # noqa: F405
         "task": _entry["task"],
         "schedule": _cron(_entry["schedule"]),
     }

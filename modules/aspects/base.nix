@@ -10,12 +10,11 @@
       ...
     }:
     {
-      # This is a placeholder `nixos.fileSystems`.  Without it, the flake will
-      # fail to evaluate.  The resulting configuration is not usable, so a user
-      # must provide overriding configuration.
-      boot.loader.grub.enable = false;
-      fileSystems."/".device = "/dev/null";
-      fileSystems."/".fsType = "auto";
+      # Placeholder so that at least the resulting config can be evaluated.
+      fileSystems."/" = {
+        device = "/dev/null";
+        fsType = "auto";
+      };
 
       environment.systemPackages = with pkgs; [
         emacs30
@@ -27,6 +26,8 @@
         sd
       ];
 
+      # Collect the disparate `firewall = { ports = [ 1234 ] }` declarations
+      # from various aspects.
       networking.firewall.allowedTCPPorts = lib.concatMap (f: f.ports or [ ]) firewall;
     };
 }
