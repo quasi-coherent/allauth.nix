@@ -50,13 +50,6 @@ in
         List of den aspects to add to the `includes` field of the output aspect.
       '';
     };
-    extraModules = mkOption {
-      type = with types; listOf deferredModule;
-      default = [ ];
-      description = ''
-        Additional modules to merge with the final host configuration.
-      '';
-    };
     debug = mkOption {
       type = types.bool;
       default = false;
@@ -181,7 +174,6 @@ in
       };
 
     den.aspects.${cfg.projectName} = {
-      imports = cfg.extraModules;
       includes = cfg.includes ++ [ den.aspects.allauthConfig ];
     };
 
