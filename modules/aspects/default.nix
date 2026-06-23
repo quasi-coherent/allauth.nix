@@ -1,6 +1,7 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   imports = [
+    (inputs.den.namespace "aa" true)
     ./base.nix
     ./secrets.nix
     ./storage.nix

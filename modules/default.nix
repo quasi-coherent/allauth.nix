@@ -5,7 +5,6 @@
 }:
 {
   imports = [
-    (inputs.den.namespace "aa" true)
     inputs.den.flakeModules.default
     ./aspects
     ./devShells.nix
