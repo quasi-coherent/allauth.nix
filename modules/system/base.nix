@@ -23,7 +23,7 @@
     };
 
   # Placeholder root directory mountpoint so that the resulting config at least
-  # evaulates.  Users will want to change this or not include it.
+  # evaluates.  Users will want to change this or not include it.
   aa.dummyRootMount.nixos = {
     fileSystems."/" = {
       device = "/dev/null";
