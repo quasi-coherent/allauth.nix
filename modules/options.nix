@@ -43,13 +43,6 @@ in
       default = false;
       description = "Enable debug mode in the AA app.";
     };
-    targetSystem = {
-      type = types.str;
-      default = "x86_64-linux";
-      description = ''
-        The architecture of the system where this will be deployed.
-      '';
-    };
     finalInstalledApps = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -81,7 +74,6 @@ in
           siteName
           siteUrl
           sopsConfig
-          targetSystem
           ;
 
         projectDir = "/var/lib/allauth/${projectName}";
@@ -124,7 +116,6 @@ in
           projectDir
           projectName
           sopsConfig
-          targetSystem
           user
           webDir
           ;
@@ -174,10 +165,6 @@ in
                 default = "/run/gunicorn/gunicorn.sock";
                 internal = true;
                 readOnly = true;
-              };
-              targetSystem = mkOption {
-                type = types.str;
-                internal = true;
               };
             };
           }
