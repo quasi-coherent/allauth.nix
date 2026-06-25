@@ -1,4 +1,5 @@
 {
+  inputs,
   lib,
   ...
 }:
@@ -10,13 +11,17 @@ let
       ...
     }:
     let
+      venv = import ./venv { inherit inputs pkgs; };
+      inherit (venv) allauth-venv fileset;
+
       fmtt = pkgs.writeShellApplication {
         name = "fmtt";
         text = ''${lib.getExe self'.formatter} "$@"'';
       };
-      inherit (self'.packages) allauth-venv fileset;
     in
     {
+      packages.allauth-venv = allauth-venv;
+
       devShells.default = pkgs.mkShell {
         # Prevents uv from managing virtual environments or downloading managed
         # interpreters.
@@ -42,10 +47,23 @@ let
           pkgs.uv
         ];
       };
+
+      treefmt = {
+        projectRootFile = ".git/config";
+        programs = {
+          nixfmt.enable = true;
+          deadnix.enable = true;
+          ruff-check.enable = true;
+          ruff-format.enable = true;
+          typos.enable = true;
+        };
+        settings.excludes = [
+          ".direnv/*"
+        ];
+      };
     };
 in
 {
-  imports = [ ];
-
   inherit perSystem;
+  imports = [ inputs.treefmt-nix.flakeModule ];
 }

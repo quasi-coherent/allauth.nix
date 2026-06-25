@@ -51,7 +51,7 @@ in
       ...
     }:
     let
-      inherit (import ./lib { inherit lib; }) mkAllAuthCli;
+      inherit (import ../lib { inherit lib; }) mkAllAuthCli;
       allauth-venv = self'.packages.allauth-venv;
       allauth-cli = mkAllAuthCli {
         inherit
@@ -128,7 +128,7 @@ in
       ...
     }:
     let
-      inherit (import ./lib { inherit lib; }) mkAllAuthCli;
+      inherit (import ../lib { inherit lib; }) mkAllAuthCli;
       allauth-venv = self'.packages.allauth-venv;
       allauth-cli = mkAllAuthCli {
         inherit
