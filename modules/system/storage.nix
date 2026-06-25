@@ -1,4 +1,5 @@
 {
+  aa,
   den,
   ...
 }:
@@ -11,6 +12,11 @@ let
     ;
 in
 {
+  den.aspects.storage.includes = [
+    aa.mysql
+    aa.redis
+  ];
+
   aa.mysql = {
     nixos =
       { pkgs, ... }:

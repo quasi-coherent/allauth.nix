@@ -20,8 +20,6 @@ let
       };
     in
     {
-      packages.allauth-venv = allauth-venv;
-
       devShells.default = pkgs.mkShell {
         # Prevents uv from managing virtual environments or downloading managed
         # interpreters.
@@ -65,5 +63,4 @@ let
 in
 {
   inherit perSystem;
-  imports = [ inputs.treefmt-nix.flakeModule ];
 }

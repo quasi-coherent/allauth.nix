@@ -1,14 +1,14 @@
 { config, lib, ... }:
 let
   inherit (lib) mkEnableOption mkOption types;
-  inherit (import ../lib { inherit lib; }) mkModuleOption beatScheduleType;
+  atypes = (import ../lib).types { inherit lib; };
   cfg = config.allauth.services.discord;
   siteUrl = config.allauth.siteUrl;
 in
 {
   options.allauth.services.discord = {
     enable = mkEnableOption "discord";
-    module = mkModuleOption "allianceauth.services.modules.discord";
+    module = atypes.mkModuleOption "allianceauth.services.modules.discord";
     syncNames = mkOption {
       type = types.bool;
       default = false;
@@ -18,7 +18,7 @@ in
       '';
     };
     beatSchedule = mkOption {
-      type = beatScheduleType;
+      type = atypes.beatScheduleType;
       description = "Celery beat scheduler config.";
       default = { };
     };

@@ -1,4 +1,4 @@
-{ den, ... }:
+{ aa, den, ... }:
 let
   inherit (den.aspects.allauthConfig)
     group
@@ -10,6 +10,12 @@ let
     ;
 in
 {
+  den.aspects.web.includes = [
+    aa.nginx
+    aa.gunicorn
+    aa.celery
+  ];
+
   aa.nginx = {
     firewall.ports = [
       80
@@ -44,14 +50,13 @@ in
   aa.gunicorn.nixos =
     {
       config,
-      lib,
       projectValues,
       self',
       pkgs,
       ...
     }:
     let
-      inherit (import ../lib { inherit lib; }) mkAllAuthCli;
+      inherit (import ../lib) mkAllAuthCli;
       allauth-venv = self'.packages.allauth-venv;
       allauth-cli = mkAllAuthCli {
         inherit
@@ -121,14 +126,13 @@ in
   aa.celery.nixos =
     {
       config,
-      lib,
       projectValues,
       pkgs,
       self',
       ...
     }:
     let
-      inherit (import ../lib { inherit lib; }) mkAllAuthCli;
+      inherit (import ../lib) mkAllAuthCli;
       allauth-venv = self'.packages.allauth-venv;
       allauth-cli = mkAllAuthCli {
         inherit
