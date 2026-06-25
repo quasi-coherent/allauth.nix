@@ -1,14 +1,5 @@
-{ den, inputs, ... }:
+{ den, ... }:
 {
-  imports = [
-    (inputs.den.namespace "aa" true)
-    ./base.nix
-    ./secrets.nix
-    ./storage.nix
-    ./user.nix
-    ./web.nix
-  ];
-
   den = {
     default = {
       includes = [
@@ -27,8 +18,7 @@
       # sops activation.
       projectValues.description = "Non-secret values needed by the environment.";
 
-      # projectSecretValues.envKeyMap: mapping env vars to keys of the sops file.
-      # projectSecretValues.sopsFile: path to the sops secret file.
+      # projectSecretValues.env: mapping env vars to keys of the sops file.
       projectSecretValues.description = "Secrets needed by this AA project's environment.";
 
       # firewall.ports: list of TCP ports to allow connections on.

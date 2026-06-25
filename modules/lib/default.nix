@@ -1,34 +1,38 @@
-{ inputs, ... }:
-let
-  mkAllAuthVenv =
-    { pkgs }:
-    let
-      workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
-        workspaceRoot = ../../.;
-      };
-      venv = pkgs.callPackage ./venv.nix {
-        inherit workspace;
-        inherit (inputs) pyproject pyproject-build;
-      };
-    in
-    {
-      inherit (venv) fileset allauth-venv;
-    };
-
+{ lib, ... }:
+{
   mkAllAuthCli =
     {
       pkgs,
+      allauth-venv,
       projectDir,
       projectName,
     }:
-    let
-      inherit (mkAllAuthVenv { inherit pkgs; }) allauth-venv;
-    in
     pkgs.callPackage ./cli.nix { inherit allauth-venv projectDir projectName; };
-in
-{
-  inherit
-    mkAllAuthCli
-    mkAllAuthVenv
-    ;
+
+  mkModuleOption =
+    pyMod:
+    lib.mkOption {
+      type = lib.types.str;
+      default = pyMod;
+      description = "AA module path ${pyMod}.";
+      readOnly = true;
+    };
+
+  beatScheduleType = lib.types.submodule {
+    options = {
+      key = lib.mkOption {
+        type = lib.types.str;
+        description = "Key in the CELERY_BEAT_SCHEDULE dict.";
+      };
+      task = lib.mkOption {
+        type = lib.types.str;
+        description = "Module path to the task being scheduled.";
+      };
+      schedule = lib.mkOption {
+        type = lib.types.str;
+        description = "Crontab expression for the schedule of this task.";
+        default = "0 */12 * * *";
+      };
+    };
+  };
 }

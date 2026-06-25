@@ -1,7 +1,4 @@
-{ aa, ... }:
 {
-  den.aspects.allauthConfig.includes = [ aa.base ];
-
   aa.base.nixos =
     {
       firewall,
@@ -10,12 +7,6 @@
       ...
     }:
     {
-      # Placeholder so that at least the resulting config can be evaluated.
-      fileSystems."/" = {
-        device = "/dev/null";
-        fsType = "auto";
-      };
-
       environment.systemPackages = with pkgs; [
         emacs30
         fd
@@ -30,4 +21,13 @@
       # from various aspects.
       networking.firewall.allowedTCPPorts = lib.concatMap (f: f.ports or [ ]) firewall;
     };
+
+  # Placeholder root directory mountpoint so that the resulting config at least
+  # evaulates.  Users will want to change this or not include it.
+  aa.dummyRootMount.nixos = {
+    fileSystems."/" = {
+      device = "/dev/null";
+      fsType = "auto";
+    };
+  };
 }

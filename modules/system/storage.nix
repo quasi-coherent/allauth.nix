@@ -1,5 +1,4 @@
 {
-  aa,
   den,
   ...
 }:
@@ -12,11 +11,6 @@ let
     ;
 in
 {
-  den.aspects.allauthConfig.includes = [
-    aa.mysql
-    aa.redis
-  ];
-
   aa.mysql = {
     nixos =
       { pkgs, ... }:

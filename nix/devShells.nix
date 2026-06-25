@@ -1,5 +1,4 @@
 {
-  inputs,
   lib,
   ...
 }:
@@ -15,24 +14,9 @@ let
         name = "fmtt";
         text = ''${lib.getExe self'.formatter} "$@"'';
       };
-      venv = (import ./lib { inherit inputs; }).mkAllAuthVenv { inherit pkgs; };
-      inherit (venv) allauth-venv fileset;
+      inherit (self'.packages) allauth-venv fileset;
     in
     {
-      treefmt = {
-        projectRootFile = ".git/config";
-        programs = {
-          nixfmt.enable = true;
-          deadnix.enable = true;
-          ruff-check.enable = true;
-          ruff-format.enable = true;
-          typos.enable = true;
-        };
-        settings.excludes = [
-          ".direnv/*"
-        ];
-      };
-
       devShells.default = pkgs.mkShell {
         # Prevents uv from managing virtual environments or downloading managed
         # interpreters.
@@ -43,9 +27,7 @@ let
         # Having PYTHONPATH available can allow undeclared dependencies to
         # become available to the interpreter, which has unpredictable side
         # effects.
-        shellHook = ''
-          unset PYTHONPATH
-        '';
+        shellHook = "unset PYTHONPATH";
 
         packages = [
           allauth-venv
@@ -63,7 +45,7 @@ let
     };
 in
 {
-  imports = [ inputs.treefmt-nix.flakeModule ];
+  imports = [ ];
 
   inherit perSystem;
 }
