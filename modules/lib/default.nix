@@ -1,4 +1,4 @@
-{
+let
   mkAllAuthCli =
     {
       pkgs,
@@ -51,4 +51,19 @@
     {
       inherit (venv) allauth-venv fileset;
     };
+
+  mkAllAuthShell' =
+    { inputs, pkgs, ... }:
+    let
+      inherit (mkAllAuthVenv' { inherit inputs pkgs; }) allauth-venv fileset;
+    in
+    pkgs.callPackage ./devShell.nix { inherit allauth-venv fileset; };
+in
+{
+  inherit
+    mkAllAuthCli
+    mkAllAuthVenv'
+    mkAllAuthShell'
+    types
+    ;
 }

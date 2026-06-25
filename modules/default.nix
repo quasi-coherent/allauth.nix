@@ -2,17 +2,8 @@
 {
   imports = [
     inputs.flake-parts.flakeModules.partitions
-    ./flakeModule.nix
+    ./flake-parts.nix
   ];
-
-  perSystem =
-    { pkgs, ... }:
-    let
-      venv = import ./venv { inherit inputs pkgs; };
-    in
-    {
-      packages = { inherit (venv) allauth-venv; };
-    };
 
   partitionedAttrs.checks = "dev";
   partitionedAttrs.devShells = "dev";

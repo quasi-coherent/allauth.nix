@@ -11,8 +11,8 @@ let
 in
 {
   imports = [
+    ./aspects
     ./options
-    ./system
   ];
 
   options.allauth = {
