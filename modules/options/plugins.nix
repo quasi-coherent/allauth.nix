@@ -40,7 +40,7 @@ in
     };
   };
 
-  config.allauth.finalInstalledApps =
+  config.allauth.app.finalInstalledApps =
     let
       enabled = lib.filterAttrs (_: p: p.enable) cfg;
     in

@@ -26,8 +26,8 @@ in
         contents depending on what is enabled.
 
         For example, any AA application needs the ESI SSO client ID and
-        secret, and so these always must be found in the sops secret because this
-        module expects that.
+        secret, and so these always must be found in the sops secret because
+        this module expects that.
 
         Additional plugins and services may have their own set of secret values,
         which should exist in the file as well if the plugin or service is
@@ -41,8 +41,9 @@ in
         Configuration for filesystem mountpoints.
 
         A nixosSystem must have at least the root directory configured to be able
-        to evaluate.  This could be provided by a more elaborate framework such
-        as disko, or the plain `fileSystems` option can be defined inline here.
+        to evaluate.  This could be provided indirectly through more elaborate
+        means (e.g., disko) or the plain `fileSystems` option can be defined
+        inline here.
       '';
     };
     systemPackages = mkOption {

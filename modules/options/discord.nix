@@ -24,7 +24,7 @@ in
     };
   };
 
-  config.allauth = lib.mkIf cfg.enable {
+  config.allauth.app = lib.mkIf cfg.enable {
     finalInstalledApps = [ cfg.module ];
     finalStaticEnvVars = {
       DISCORD_ENABLED = "1";

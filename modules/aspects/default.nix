@@ -34,10 +34,10 @@ in
       group = "${projectName}-admins";
       dbName = "${projectName}_db";
 
-      beatConfig = cfg.finalBeatConfig;
+      beatConfig = cfg.app.finalBeatConfig;
 
       staticEnvVars =
-        cfg.finalStaticEnvVars
+        cfg.app.finalStaticEnvVars
         // {
           AA_SITE_NAME = siteName;
           AA_SITE_URL = siteUrl;
@@ -46,7 +46,7 @@ in
           AA_DB_NAME = dbName;
           AA_DB_USER = user;
           AA_DEBUG = debug;
-          AA_EXTRA_INSTALLED_APPS = lib.concatStringsSep "," cfg.finalInstalledApps;
+          AA_EXTRA_INSTALLED_APPS = lib.concatStringsSep "," cfg.app.finalInstalledApps;
         }
         // lib.optionalAttrs (beatConfig != [ ]) {
           AA_BEAT_JSON = builtins.toJSON beatConfig;
