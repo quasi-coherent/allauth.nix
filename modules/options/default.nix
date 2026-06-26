@@ -1,10 +1,13 @@
 {
+  config,
+  inputs,
   lib,
   ...
 }:
 let
   inherit (lib) mkOption types;
-  atypes = (import ../lib).types { inherit lib; };
+  alib = import ../lib;
+  atypes = alib.types { inherit lib; };
 in
 {
   imports = [
@@ -13,6 +16,24 @@ in
   ];
 
   options.allauth.app = {
+    package = mkOption {
+      type = types.package;
+      default =
+        (alib.mkAllAuthVenv' {
+          inherit inputs;
+          pkgs = inputs.nixpkgs.legacyPackages.${config.allauth.targetSystem};
+        }).allauth-venv;
+      defaultText = lib.literalMD "the default allauth virtualenv";
+      description = ''
+        Virtualenv providing the `aa` CLI's Python runtime.
+
+        Defaults to the allauth virtualenv built by this flake.  A downstream
+        flake may supply its own virtualenv (built from its own uv workspace
+        depending on allauth) here to layer extra functionality, provided it
+        still contains the allauth project package and a valid environment for
+        the CLI subcommands.
+      '';
+    };
     projectName = mkOption {
       type = types.str;
       default = "allauth";

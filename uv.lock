@@ -7,11 +7,6 @@ resolution-markers = [
     "python_full_version < '3.13'",
 ]
 
-[manifest]
-members = [
-    "allauth",
-]
-
 [[package]]
 name = "aiodns"
 version = "4.0.4"
@@ -48,7 +43,7 @@ wheels = [
 [[package]]
 name = "allauth"
 version = "0.1.0"
-source = { editable = "packages/allauth" }
+source = { editable = "." }
 dependencies = [
     { name = "allianceauth" },
     { name = "gunicorn" },

@@ -3,6 +3,7 @@ let
   inherit (den.aspects.allauthConfig)
     group
     gunicornSock
+    package
     projectDir
     projectName
     user
@@ -51,16 +52,14 @@ in
     {
       config,
       projectValues,
-      self',
       pkgs,
       ...
     }:
     let
       inherit (import ../lib) mkAllAuthCli;
-      allauth-venv = self'.packages.allauth-venv;
       allauth-cli = mkAllAuthCli {
         inherit
-          allauth-venv
+          package
           pkgs
           projectDir
           projectName
@@ -128,15 +127,13 @@ in
       config,
       projectValues,
       pkgs,
-      self',
       ...
     }:
     let
       inherit (import ../lib) mkAllAuthCli;
-      allauth-venv = self'.packages.allauth-venv;
       allauth-cli = mkAllAuthCli {
         inherit
-          allauth-venv
+          package
           pkgs
           projectDir
           projectName

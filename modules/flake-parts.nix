@@ -33,14 +33,16 @@ in
       venv = mkAllAuthVenv { inherit pkgs; };
     in
     {
-      packages = { inherit (venv) allauth-venv; };
+      packages = { inherit (venv) allauth; };
     };
 
   flake = {
     lib = {
-      inherit (alib) mkAllAuthCli;
+      inherit (alib) mkAllAuthCli overrides;
       inherit mkAllAuthVenv mkAllAuthShell;
     };
+
+    overlays.default = alib.overrides;
 
     flakeModules = {
       default = self.nixosModules.allauth;

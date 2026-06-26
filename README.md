@@ -1,15 +1,13 @@
 # allauth.nix
 
-A WIP Nix flake providing a base NixOS configuration containing:
-* An instance of the [Alliance Auth][django-app] Django application.
-* Module options to configure and activate additional AA plugins/services.
-* The infrastructure needed by the webapp.
-* The supporting runtime for the webapp.
-* Secrets management.
+Flake to build a NixOS system for hosting [Alliance Auth](django-app).
 
-Future work:
-* API for adding custom AA extensions.
-* Tooling for deployment.
+Has:
+* A running AA webapp.
+* Module options to augment/customize the webapp.
+* Infrastructure needed by the webapp.
+* Runtime for django-admin and starting services, including the webapp.
+* Secrets management for the webapp.
 
 <!-- ## Usage -->
 
@@ -53,6 +51,36 @@ Future work:
 <!-- }; -->
 <!-- ``` -->
 
+## Customizing the AA runtime
+
+This flake has a package output providing the Python package `allauth` as a
+`pyproject` fileset.  This allows a user to import it and layer additional
+functionality within the virtualenv that supplies the app runtime.
+
+Relevant outputs are:
+
+* `packages.<system>.allauth`: Thin AA wrapper package.  This package collects
+  environment variables that otherwise would need to be written directly into
+  the Django settings/local.py file.  `options.allauth.project.package` defaults
+  to the virtualenv built from this minimum package.
+* `overlays.default` — a `pyproject.nix` fileset overlay patching some of the
+  `allauth` dependencies that are lacking setuptools or other build requirements.
+
+Add the package `allauth` as a dependency, sourced via `[tool.uv.sources]`, and
+use as in
+
+```nix
+pythonSet = pythonBase.overrideScope (lib.composeManyExtensions [
+  pyproject-build-systems.overlays.wheel  (workspace.mkPyprojectOverlay { sourcePreference = "wheel"; })
+  (allauth.overlays.default pkgs)
+]);
+venv = pythonSet.mkVirtualEnv "my-allauth-venv" workspace.deps.default;
+```
+
+where `workspace` is a suitable `uv2nix` "workspace" loaded from the local source.
+
+This `venv` can be handed to the module options `allauth.app.package`, which only
+expects a virtualenv that preserves the validity of the CLI subcommands needed at
+runtime, defined [here](./modules/lib/cli.nix).
+
 [django-app]: https://allianceauth.readthedocs.io/en/v5.1.4/features/overview.html
-[`den`]: https://github.com/denful/den
-[den-ns]: https://den.denful.dev/guides/namespaces/

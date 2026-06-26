@@ -2,11 +2,13 @@ let
   mkAllAuthCli =
     {
       pkgs,
-      allauth-venv,
+      package,
       projectDir,
       projectName,
     }:
-    pkgs.callPackage ./cli.nix { inherit allauth-venv projectDir projectName; };
+    pkgs.callPackage ./cli.nix { inherit package projectDir projectName; };
+
+  overrides = pkgs: pkgs.callPackage ./overrides.nix { };
 
   types = { lib }: {
     mkModuleOption =
@@ -49,7 +51,12 @@ let
       };
     in
     {
-      inherit (venv) allauth-venv fileset;
+      inherit (venv)
+        allauth
+        allauth-venv
+        fileset
+        pyprojectOverrides
+        ;
     };
 
   mkAllAuthShell' =
@@ -64,6 +71,7 @@ in
     mkAllAuthCli
     mkAllAuthVenv'
     mkAllAuthShell'
+    overrides
     types
     ;
 }
