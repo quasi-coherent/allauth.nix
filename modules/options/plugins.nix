@@ -1,42 +1,42 @@
 { config, lib, ... }:
 let
   inherit (lib) mkEnableOption;
-  inherit (import ../lib { inherit lib; }) mkModuleOption;
+  atypes = (import ../lib).types { inherit lib; };
   cfg = config.allauth.plugins;
 in
 {
   options.allauth.plugins = {
     autoGroups = {
       enable = mkEnableOption "autoGroups";
-      module = mkModuleOption "allianceauth.eveonline.autogroups";
+      module = atypes.mkModuleOption "allianceauth.eveonline.autogroups";
     };
     corpStats = {
       enable = mkEnableOption "corpStats";
-      module = mkModuleOption "allianceauth.corputils";
+      module = atypes.mkModuleOption "allianceauth.corputils";
     };
     fleetActivityTracking = {
       enable = mkEnableOption "fleetActivityTracking";
-      module = mkModuleOption "allianceauth.fleetactivitytracking";
+      module = atypes.mkModuleOption "allianceauth.fleetactivitytracking";
     };
     hrApps = {
       enable = mkEnableOption "hrApps";
-      module = mkModuleOption "allianceauth.hrapplications";
+      module = atypes.mkModuleOption "allianceauth.hrapplications";
     };
     fleetOps = {
       enable = mkEnableOption "fleetOps";
-      module = mkModuleOption "allianceauth.optimer";
+      module = atypes.mkModuleOption "allianceauth.optimer";
     };
     permissionsAuditing = {
       enable = mkEnableOption "permissionsAuditing";
-      module = mkModuleOption "allianceauth.permissions_tool";
+      module = atypes.mkModuleOption "allianceauth.permissions_tool";
     };
     shipReplacement = {
       enable = mkEnableOption "shipReplacement";
-      module = mkModuleOption "allianceauth.srp";
+      module = atypes.mkModuleOption "allianceauth.srp";
     };
     structureTimers = {
       enable = mkEnableOption "structureTimers";
-      module = mkModuleOption "allianceauth.timerboard";
+      module = atypes.mkModuleOption "allianceauth.timerboard";
     };
   };
 
