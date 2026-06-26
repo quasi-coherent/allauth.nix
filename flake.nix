@@ -1,6 +1,8 @@
 {
   description = "NixOS for Alliance Auth";
+
   outputs = inputs: import ./outputs.nix inputs;
+
   inputs = {
     den.url = "github:vic/den";
     flake-parts.url = "github:hercules-ci/flake-parts";

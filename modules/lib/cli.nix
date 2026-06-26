@@ -1,12 +1,12 @@
 {
-  allauth-venv,
+  package,
   projectDir,
   projectName,
   writeShellApplication,
 }:
 writeShellApplication {
   name = "aa";
-  runtimeInputs = [ allauth-venv ];
+  runtimeInputs = [ package ];
   text = ''
     AA_PROJECT_DIR="${projectDir}"
     AA_PROJECT_NAME="${projectName}"

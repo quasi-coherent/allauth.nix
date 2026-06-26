@@ -22,6 +22,7 @@ in
     let
       inherit (cfg.app)
         debug
+        package
         projectName
         siteName
         siteUrl
@@ -64,6 +65,7 @@ in
         dbName
         debug
         group
+        package
         projectDir
         projectName
         user
@@ -98,6 +100,10 @@ in
             };
             dbName = mkOption {
               type = types.str;
+              internal = true;
+            };
+            package = mkOption {
+              type = types.package;
               internal = true;
             };
             sops = mkOption {

@@ -1,14 +1,10 @@
 {
   callPackage,
   lib,
-  libmysqlclient,
-  pkg-config,
   pyproject,
   pyproject-build,
   python314,
-  openssl,
   workspace,
-  zlib,
 }:
 let
   builderOverlay = pyproject-build.overlays.default;
@@ -16,39 +12,9 @@ let
   # Avoid building binaries.
   wheels = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
-  # Packages that are missing setuptools need to be patched.
-  needsSetuptools = [
-    "celery-once"
-    "slixmpp"
-    "openfire-restapi"
-    "pydiscourse"
-    "django-sri"
-    "telnetlib3"
-    "ua-parser"
-    "user-agents"
-  ];
-  pyprojectOverrides =
-    final: prev:
-    (lib.genAttrs needsSetuptools (
-      name:
-      prev.${name}.overrideAttrs (old: {
-        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ final.setuptools ];
-      })
-    ))
-    // {
-      mysqlclient = prev.mysqlclient.overrideAttrs (old: {
-        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
-          final.setuptools
-          pkg-config
-        ];
-        # Non-py dylibs
-        buildInputs = (old.buildInputs or [ ]) ++ [
-          libmysqlclient
-          openssl
-          zlib
-        ];
-      });
-    };
+  # Build fix-ups for allauth's dependency closure.
+  pyprojectOverrides = callPackage ./overrides.nix { };
+
   pyProject = callPackage pyproject.build.packages {
     python = python314;
   };
@@ -62,5 +28,12 @@ let
   allauth-venv = fileset.mkVirtualEnv "allauth-venv" workspace.deps.default;
 in
 {
-  inherit fileset allauth-venv;
+  inherit
+    fileset
+    allauth-venv
+    pyprojectOverrides
+    ;
+  # The bare project package (no virtualenv) to layer over from downstream
+  # consumers of this flake.
+  allauth = fileset.allauth;
 }
