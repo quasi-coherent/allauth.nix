@@ -50,8 +50,8 @@ in
   aa.redis.nixos = {
     # It's super confusing how things are named if you call the server something
     # other than "".  With "" everything gets the name "redis".  This is not a
-    # very good implementation, `nixpkgs.services.redis`, since this is
-    # non-obvious and a default that cannot be changed.
+    # very good `services` implementation because this fact is non-obvious and a
+    # default you can't change.
     services.redis.servers."" = {
       enable = true;
       group = [ group ];
