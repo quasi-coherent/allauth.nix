@@ -14,7 +14,6 @@ in
     ./web.nix
     ./base.nix
     ./den.nix
-    ./secrets.nix
     ./storage.nix
   ];
 
