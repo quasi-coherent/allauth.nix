@@ -45,7 +45,7 @@ in
     overlays.default = alib.overrides;
 
     flakeModules = {
-      default = self.nixosModules.allauth;
+      default = self.flakeModules.allauth;
       allauth.imports = [
         ./allauth.nix
         ./host.nix
