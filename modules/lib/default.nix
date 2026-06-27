@@ -40,10 +40,15 @@ let
   };
 
   mkAllAuthVenv' =
-    { inputs, pkgs, ... }:
+    {
+      inputs,
+      pkgs,
+      workspaceRoot ? ../../.,
+      ...
+    }:
     let
       workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
-        workspaceRoot = ../../.;
+        inherit workspaceRoot;
       };
       venv = pkgs.callPackage ./venv.nix {
         inherit (inputs) pyproject pyproject-build;

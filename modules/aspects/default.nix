@@ -17,63 +17,16 @@ in
     ./storage.nix
   ];
 
+  # Aspect to gather project values and constants shared throughout the
+  # configuration.
+  #
+  # To make the module options held by `allauthConfig` accessible, per the den
+  # docs:
+  # "The function-args style is required for `imports` not to be interpreted as
+  # an aspect class."
   den.aspects.allauthConfig =
-    let
-      inherit (cfg.app)
-        debug
-        package
-        projectName
-        siteName
-        siteUrl
-        ;
-
-      projectDir = "/var/lib/allauth/${projectName}";
-      webDir = "/var/www/${projectName}";
-
-      user = "${projectName}-admin";
-      group = "${projectName}-admins";
-      dbName = "${projectName}_db";
-
-      beatConfig = cfg.app.finalBeatConfig;
-
-      staticEnvVars =
-        cfg.app.finalStaticEnvVars
-        // {
-          AA_SITE_NAME = siteName;
-          AA_SITE_URL = siteUrl;
-          AA_STATIC_ROOT = "${webDir}/static";
-          AA_LOG_DIR = "${projectDir}/log";
-          AA_DB_NAME = dbName;
-          AA_DB_USER = user;
-          AA_DEBUG = debug;
-          AA_EXTRA_INSTALLED_APPS = lib.concatStringsSep "," cfg.app.finalInstalledApps;
-        }
-        // lib.optionalAttrs (beatConfig != [ ]) {
-          AA_BEAT_JSON = builtins.toJSON beatConfig;
-        };
-
-      envKeyMap = cfg.finalSopsEnvVarKeys // {
-        SECRET_KEY = "secret_key";
-        ESI_SSO_CLIENT_ID = "esi_sso_client_id";
-        ESI_SSO_CLIENT_SECRET = "esi_sso_client_secret";
-        ESI_USER_CONTACT_EMAIL = "esi_user_contact_email";
-      };
-    in
+    { config, ... }:
     {
-      inherit
-        dbName
-        debug
-        group
-        package
-        projectDir
-        projectName
-        user
-        webDir
-        ;
-
-      projectValues.env = staticEnvVars;
-      projectSecretValues.env = envKeyMap;
-
       imports = [
         {
           options = {
@@ -101,14 +54,6 @@ in
               type = types.str;
               internal = true;
             };
-            package = mkOption {
-              type = types.package;
-              internal = true;
-            };
-            sops = mkOption {
-              type = with types; lazyAttrsOf raw;
-              internal = true;
-            };
             redisSock = mkOption {
               type = types.str;
               default = "/run/redis/redis.sock";
@@ -121,8 +66,48 @@ in
               internal = true;
               readOnly = true;
             };
+            staticEnv = mkOption {
+              type = with types; attrsOf str;
+              internal = true;
+            };
+            sopsEnv = mkOption {
+              type = with types; attrsOf str;
+              internal = true;
+            };
           };
         }
       ];
+
+      projectName = cfg.app.projectName;
+      projectDir = "/var/lib/allauth/${config.projectName}";
+      webDir = "/var/www/${config.projectName}";
+      user = "${config.projectName}-admin";
+      group = "${config.projectName}-admins";
+      dbName = "${config.projectName}_db";
+
+      # Static (non-secret) environment variables.
+      staticEnv =
+        cfg.app.finalStaticEnvVars
+        // {
+          AA_SITE_NAME = cfg.app.siteName;
+          AA_SITE_URL = cfg.app.siteUrl;
+          AA_STATIC_ROOT = "${config.webDir}/static";
+          AA_LOG_DIR = "${config.projectDir}/log";
+          AA_DB_NAME = config.dbName;
+          AA_DB_USER = config.user;
+          AA_DEBUG = if cfg.app.debug then "True" else "False";
+          AA_EXTRA_INSTALLED_APPS = lib.concatStringsSep "," cfg.app.finalInstalledApps;
+        }
+        // lib.optionalAttrs (cfg.app.finalBeatConfig != [ ]) {
+          AA_BEAT_JSON = builtins.toJSON cfg.app.finalBeatConfig;
+        };
+
+      # Mapping of environment variable -> sops key.
+      sopsEnv = cfg.app.finalSopsEnvVarKeys // {
+        SECRET_KEY = "secret_key";
+        ESI_SSO_CLIENT_ID = "esi_sso_client_id";
+        ESI_SSO_CLIENT_SECRET = "esi_sso_client_secret";
+        ESI_USER_CONTACT_EMAIL = "esi_user_contact_email";
+      };
     };
 }

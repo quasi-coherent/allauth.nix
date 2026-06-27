@@ -1,8 +1,4 @@
-{
-  aa,
-  den,
-  ...
-}:
+{ aa, den, ... }:
 let
   inherit (den.aspects.allauthConfig)
     dbName
@@ -25,16 +21,18 @@ in
           mysql = {
             enable = true;
             package = pkgs.mariadb_114;
-            bind = "localhost";
-            configFile = ''
-              [mysqld]
-              character-set-server = utf8mb4
-              collation-server     = utf8mb4_unicode_ci
-            '';
-            ensureDatabases = [ dbName ];
-            ensureUsers.${user} = {
-              ensurePermissions."${dbName}.*" = "ALL PRIVILEGES";
+            settings.mysqld = {
+              bind-address = "127.0.0.1";
+              character-set-server = "utf8mb4";
+              collation-server = "utf8mb4_unicode_ci";
             };
+            ensureDatabases = [ dbName ];
+            ensureUsers = [
+              {
+                name = user;
+                ensurePermissions."${dbName}.*" = "ALL PRIVILEGES";
+              }
+            ];
           };
 
           mysqlBackup = {
@@ -54,7 +52,7 @@ in
     # default you can't change.
     services.redis.servers."" = {
       enable = true;
-      group = [ group ];
+      inherit group;
       bind = "localhost";
       port = 6379;
       unixSocket = redisSock;

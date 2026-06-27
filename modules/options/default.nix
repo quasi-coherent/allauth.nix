@@ -1,6 +1,4 @@
 {
-  config,
-  inputs,
   lib,
   ...
 }:
@@ -17,21 +15,19 @@ in
 
   options.allauth.app = {
     package = mkOption {
-      type = types.package;
-      default =
-        (alib.mkAllAuthVenv' {
-          inherit inputs;
-          pkgs = inputs.nixpkgs.legacyPackages.${config.allauth.targetSystem};
-        }).allauth-venv;
-      defaultText = lib.literalMD "the default allauth virtualenv";
+      type = with types; nullOr package;
+      default = null;
       description = ''
         Virtualenv providing the `aa` CLI's Python runtime.
 
-        Defaults to the allauth virtualenv built by this flake.  A downstream
-        flake may supply its own virtualenv (built from its own uv workspace
-        depending on allauth) here to layer extra functionality, provided it
-        still contains the allauth project package and a valid environment for
-        the CLI subcommands.
+        When `null` (the default) the virtualenv is built from
+        `allauth.workspaceRoot` using each host's own `pkgs`, so it is produced
+        for the correct architecture per host.
+
+        A downstream flake may instead supply its own virtualenv (built from its
+        own uv workspace depending on allauth) here to layer extra
+        functionality, provided it still contains the allauth project package
+        and a valid environment for the CLI subcommands.
       '';
     };
     projectName = mkOption {
@@ -50,7 +46,7 @@ in
       example = "https://auth.allauth.space";
       description = "Base URL";
     };
-    debug = {
+    debug = mkOption {
       type = types.bool;
       default = false;
       description = "Enable debug mode in the AA app.";

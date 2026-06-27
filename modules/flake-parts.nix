@@ -46,10 +46,7 @@ in
 
     flakeModules = {
       default = self.flakeModules.allauth;
-      allauth.imports = [
-        ./allauth.nix
-        ./host.nix
-      ];
+      allauth.imports = [ ./allauth.nix ];
     };
   };
 }

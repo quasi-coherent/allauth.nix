@@ -3,7 +3,7 @@ let
   inherit (lib) mkEnableOption mkOption types;
   atypes = (import ../lib).types { inherit lib; };
   cfg = config.allauth.services.discord;
-  siteUrl = config.allauth.siteUrl;
+  siteUrl = config.allauth.app.siteUrl;
 in
 {
   options.allauth.services.discord = {

@@ -1,14 +1,33 @@
-{ aa, den, ... }:
+{
+  aa,
+  config,
+  den,
+  inputs,
+  ...
+}:
 let
+  cfg = config.allauth;
+
+  inherit (import ../lib) mkAllAuthCli mkAllAuthVenv';
   inherit (den.aspects.allauthConfig)
     group
     gunicornSock
-    package
     projectDir
     projectName
+    staticEnv
     user
     webDir
     ;
+
+  mkPackage =
+    pkgs:
+    if cfg.app.package != null then
+      cfg.app.package
+    else
+      (mkAllAuthVenv' {
+        inherit inputs pkgs;
+        inherit (cfg) workspaceRoot;
+      }).allauth-venv;
 in
 {
   den.aspects.web.includes = [
@@ -51,19 +70,13 @@ in
   aa.gunicorn.nixos =
     {
       config,
-      projectValues,
       pkgs,
       ...
     }:
     let
-      inherit (import ../lib) mkAllAuthCli;
       allauth-cli = mkAllAuthCli {
-        inherit
-          package
-          pkgs
-          projectDir
-          projectName
-          ;
+        inherit pkgs projectDir projectName;
+        package = mkPackage pkgs;
       };
     in
     {
@@ -88,7 +101,7 @@ in
         description = "Initialization tasks for the AA app";
         requiredBy = [ "gunicorn.service" ];
         before = [ "gunicorn.service" ];
-        environment = projectValues.env;
+        environment = staticEnv;
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
@@ -108,7 +121,7 @@ in
         requires = [ "gunicorn.socket" ];
         after = [ "network.target" ];
         wantedBy = [ "multi-user.target" ];
-        environment = projectValues.env;
+        environment = staticEnv;
         serviceConfig = {
           Type = "notify";
           User = user;
@@ -125,19 +138,13 @@ in
   aa.celery.nixos =
     {
       config,
-      projectValues,
       pkgs,
       ...
     }:
     let
-      inherit (import ../lib) mkAllAuthCli;
       allauth-cli = mkAllAuthCli {
-        inherit
-          package
-          pkgs
-          projectDir
-          projectName
-          ;
+        inherit pkgs projectDir projectName;
+        package = mkPackage pkgs;
       };
     in
     {
@@ -149,7 +156,7 @@ in
           "allauth-init.service"
         ];
         requires = [ "allauth-init.service" ];
-        environment = projectValues.env;
+        environment = staticEnv;
         serviceConfig = {
           User = user;
           Group = group;
@@ -168,7 +175,7 @@ in
           "allauth-init.service"
         ];
         requires = [ "allauth-init.service" ];
-        environment = projectValues.env;
+        environment = staticEnv;
         serviceConfig = {
           User = user;
           Group = group;
@@ -187,7 +194,7 @@ in
           "allauth-init.service"
         ];
         requires = [ "allauth-init.service" ];
-        environment = projectValues.env;
+        environment = staticEnv;
         serviceConfig = {
           User = user;
           Group = group;

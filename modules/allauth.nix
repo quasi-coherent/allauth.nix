@@ -60,16 +60,14 @@ in
         Additional aspects to include in the final, main aspect.
       '';
     };
-    targetSystem = mkOption {
-      type =
-        with types;
-        enum [
-          "x86_64-linux"
-          "aarch64-linux"
-        ];
-      default = "aarch64-linux";
+    workspaceRoot = mkOption {
+      type = with types; either str path;
+      default = ../.;
       description = ''
-        The architecture of the system where this configuration will apply.
+        Root of the uv workspace used to build the runtime virtualenv.  Defaults
+        to this flake's own uv workspace.  Non-default is expected to depend on
+        the `allauth` Python package, or otherwise must ensure the resulting env
+        can execute the subcommands of the `aa` CLI.
       '';
     };
   };
@@ -84,18 +82,17 @@ in
       ]
       ++ cfg.includes;
 
-      imports = [
-        inputs.sops.nixosModules.sops
-      ];
-
       nixos =
         {
           config,
           pkgs,
-          projectSecretValues,
           ...
         }:
         {
+          imports = [
+            inputs.sops.nixosModules.sops
+          ];
+
           environment.systemPackages = cfg.systemPackages ++ [
             pkgs.age
             pkgs.emacs30
@@ -114,8 +111,7 @@ in
 
           sops =
             let
-              inherit (projectSecretValues) env;
-
+              env = den.aspects.allauthConfig.sopsEnv;
               # Values in the attrset `env` are the sops keys.
               secrets = lib.genAttrs (lib.attrValues env) (_: { });
               # One env file rendered into tmpfs owned by the service user.

@@ -27,7 +27,8 @@ in
       # Defines the user ${project}-admin
       users.users.${user} = {
         inherit group;
-        shell = pkgs.nologin;
+        isSystemUser = true;
+        shell = "${pkgs.shadow}/bin/nologin";
       };
 
       # Defines the group ${project}-admins
@@ -35,7 +36,7 @@ in
     };
 
   aa.ssh.nixos = {
-    # TODO: deployment/admin config
+    # TODO: deployment/admin config.
     services.openssh.enable = true;
   };
 }
