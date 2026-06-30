@@ -6,17 +6,25 @@ let
   alib = import ./lib;
 
   mkAllAuthVenv =
-    { pkgs, ... }:
+    {
+      pkgs,
+      workspaceRoot ? ../.,
+      ...
+    }:
     alib.mkAllAuthVenv' {
       inherit (self) inputs;
-      inherit pkgs;
+      inherit pkgs workspaceRoot;
     };
 
   mkAllAuthShell =
-    { pkgs, ... }:
+    {
+      pkgs,
+      workspaceRoot ? ../.,
+      ...
+    }:
     alib.mkAllAuthShell' {
       inherit (self) inputs;
-      inherit pkgs;
+      inherit pkgs workspaceRoot;
     };
 in
 {

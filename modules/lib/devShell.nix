@@ -4,17 +4,26 @@
   fileset,
   mkShell,
   sops,
-  stdenv,
   uv,
 }:
 {
+  checks ? { },
+  inputsFrom ? [ ],
   packages ? [ ],
   ...
 }@args:
+let
+  cleanedArgs = removeAttrs args [
+    "checks"
+    "inputsFrom"
+    "nativeBuildInputs"
+  ];
+in
 mkShell (
-  args
+  cleanedArgs
   // {
-    inherit (stdenv.hostPlatform) system;
+    inputsFrom = builtins.attrValues checks ++ inputsFrom;
+
     UV_NO_SYNC = "1";
     UV_PYTHON_DOWNLOADS = "never";
     UV_PYTHON = fileset.python.interpreter;
