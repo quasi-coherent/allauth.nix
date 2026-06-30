@@ -8,7 +8,7 @@ let
   mkAllAuthVenv =
     {
       pkgs,
-      workspaceRoot ? ../.,
+      workspaceRoot,
       ...
     }:
     alib.mkAllAuthVenv' {
@@ -19,12 +19,12 @@ let
   mkAllAuthShell =
     {
       pkgs,
-      workspaceRoot ? ../.,
+      allauth-venv,
+      fileset,
       ...
     }:
     alib.mkAllAuthShell' {
-      inherit (self) inputs;
-      inherit pkgs workspaceRoot;
+      inherit pkgs allauth-venv fileset;
     };
 in
 {
@@ -38,7 +38,10 @@ in
   perSystem =
     { pkgs, ... }:
     let
-      venv = mkAllAuthVenv { inherit pkgs; };
+      venv = mkAllAuthVenv {
+        inherit pkgs;
+        workspaceRoot = ../.;
+      };
     in
     {
       packages = { inherit (venv) allauth; };

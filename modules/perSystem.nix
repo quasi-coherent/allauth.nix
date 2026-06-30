@@ -15,8 +15,14 @@ let
         name = "fmtt";
         text = ''${lib.getExe self'.formatter} "$@"'';
       };
-
-      mkAllAuthShell = self.lib.mkAllAuthShell { inherit pkgs; };
+      venv = self.lib.mkAllAuthVenv {
+        inherit pkgs;
+        workspaceRoot = ../.;
+      };
+      mkAllAuthShell = self.lib.mkAllAuthShell {
+        inherit pkgs;
+        inherit (venv) allauth-venv fileset;
+      };
     in
     {
       devShells.default = mkAllAuthShell {

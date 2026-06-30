@@ -66,14 +66,11 @@ let
 
   mkAllAuthShell' =
     {
-      inputs,
       pkgs,
-      workspaceRoot,
+      allauth-venv,
+      fileset,
       ...
     }:
-    let
-      inherit (mkAllAuthVenv' { inherit inputs pkgs workspaceRoot; }) allauth-venv fileset;
-    in
     pkgs.callPackage ./devShell.nix { inherit allauth-venv fileset; };
 in
 {
