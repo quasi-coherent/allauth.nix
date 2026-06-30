@@ -8,21 +8,11 @@
 }:
 {
   packages ? [ ],
-  inputsFrom ? [ ],
   ...
 }@args:
-let
-  cleanedArgs = removeAttrs args [
-    "checks"
-    "inputsFrom"
-    "nativeBuildInputs"
-  ];
-in
 mkShell (
-  cleanedArgs
+  args
   // {
-    inherit inputsFrom;
-
     UV_NO_SYNC = "1";
     UV_PYTHON_DOWNLOADS = "never";
     UV_PYTHON = fileset.python.interpreter;
