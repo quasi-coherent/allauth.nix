@@ -26,6 +26,12 @@ final: prev:
   })
 ))
 // {
+  # The editable root package is built with hatchling; uv2nix doesn't inject
+  # the build backend automatically, so provide it explicitly.
+  allauth = prev.allauth.overrideAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ final.hatchling ];
+  });
+
   mysqlclient = prev.mysqlclient.overrideAttrs (old: {
     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
       final.setuptools
