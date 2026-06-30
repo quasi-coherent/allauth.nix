@@ -44,7 +44,6 @@ let
       inputs,
       pkgs,
       workspaceRoot,
-      ...
     }:
     let
       workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
@@ -69,7 +68,6 @@ let
       pkgs,
       allauth-venv,
       fileset,
-      ...
     }:
     pkgs.callPackage ./devShell.nix { inherit allauth-venv fileset; };
 in

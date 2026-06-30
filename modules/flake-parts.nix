@@ -9,7 +9,6 @@ let
     {
       pkgs,
       workspaceRoot,
-      ...
     }:
     alib.mkAllAuthVenv' {
       inherit (self) inputs;
@@ -21,7 +20,6 @@ let
       pkgs,
       allauth-venv,
       fileset,
-      ...
     }:
     alib.mkAllAuthShell' {
       inherit pkgs allauth-venv fileset;
