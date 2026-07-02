@@ -1,14 +1,15 @@
 { config, lib, ... }:
 let
   inherit (lib) mkEnableOption mkOption types;
-  atypes = (import ../lib).types { inherit lib; };
   cfg = config.allauth.services.discord;
   siteUrl = config.allauth.app.siteUrl;
 in
 {
   options.allauth.services.discord = {
-    enable = mkEnableOption "discord";
-    module = atypes.mkModuleOption "allianceauth.services.modules.discord";
+    # The discord app itself is installed Python-side with
+    # `add_plugin("allianceauth.services.modules.discord")`; this option only
+    # supplies the runtime values its settings read from the environment.
+    enable = mkEnableOption "discord runtime values (secrets + static env)";
     syncNames = mkOption {
       type = types.bool;
       default = false;
@@ -17,15 +18,9 @@ in
         in-game character's name.
       '';
     };
-    beatSchedule = mkOption {
-      type = atypes.beatScheduleType;
-      description = "Celery beat scheduler config.";
-      default = { };
-    };
   };
 
   config.allauth.app = lib.mkIf cfg.enable {
-    finalInstalledApps = [ cfg.module ];
     finalStaticEnvVars = {
       DISCORD_ENABLED = "1";
       DISCORD_CALLBACK_URL = "${siteUrl}/discord/callback/";
@@ -37,6 +32,5 @@ in
       DISCORD_APP_SECRET = "discord_app_secret";
       DISCORD_BOT_TOKEN = "discord_bot_token";
     };
-    finalBeatConfig = [ cfg.beatSchedule ];
   };
 }

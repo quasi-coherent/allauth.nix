@@ -8,12 +8,11 @@
 let
   cfg = config.allauth;
 
-  inherit (import ../lib) mkAllAuthCli mkAllAuthVenv';
+  inherit (import ../lib) mkAllAuthVenv';
   inherit (den.aspects.allauthConfig)
     group
     gunicornSock
     projectDir
-    projectName
     staticEnv
     user
     webDir
@@ -28,6 +27,9 @@ let
         inherit inputs pkgs;
         inherit (cfg) workspaceRoot;
       }).allauth-venv;
+
+  # The venv ships the `aa` console-script (allauth_lib.runner:main).
+  mkCli = pkgs: "${mkPackage pkgs}/bin/aa";
 in
 {
   den.aspects.web.includes = [
@@ -74,10 +76,7 @@ in
       ...
     }:
     let
-      allauth-cli = mkAllAuthCli {
-        inherit pkgs projectDir projectName;
-        package = mkPackage pkgs;
-      };
+      allauth-cli = mkCli pkgs;
     in
     {
       systemd.tmpfiles.rules = [
@@ -142,10 +141,7 @@ in
       ...
     }:
     let
-      allauth-cli = mkAllAuthCli {
-        inherit pkgs projectDir projectName;
-        package = mkPackage pkgs;
-      };
+      allauth-cli = mkCli pkgs;
     in
     {
       systemd.services.celery-worker = {

@@ -4,13 +4,10 @@
 }:
 let
   inherit (lib) mkOption types;
-  alib = import ../lib;
-  atypes = alib.types { inherit lib; };
 in
 {
   imports = [
     ./discord.nix
-    ./plugins.nix
   ];
 
   options.allauth.app = {
@@ -35,6 +32,26 @@ in
       default = "allauth";
       description = "Name to identify this specific AA project.";
     };
+    settingsModule = mkOption {
+      type = types.str;
+      example = "mysite.settings";
+      description = ''
+        Importable Django settings module for this deployment, set as
+        `DJANGO_SETTINGS_MODULE` for every runtime process.
+
+        The module must wildcard-import the base settings and install a
+        configured `AllianceAuthApp`:
+
+        ```python
+        from allauth_lib.settings import *
+        from allauth_lib import AllianceAuthApp
+
+        app = AllianceAuthApp(name = "My Auth")
+        # ...app.var / add_plugin / add_service / celery_conf...
+        app.install(globals())
+        ```
+      '';
+    };
     siteName = mkOption {
       type = types.str;
       default = "Alliance Auth";
@@ -51,11 +68,10 @@ in
       default = false;
       description = "Enable debug mode in the AA app.";
     };
-    finalInstalledApps = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      internal = true;
-    };
+    # The Nix→runtime value seam.  App structure (INSTALLED_APPS, celery beat
+    # schedule) is owned by the Python `AllianceAuthApp`, not by Nix; these
+    # options only carry runtime *values* for settings that read them from the
+    # environment.
     finalStaticEnvVars = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -64,11 +80,6 @@ in
     finalSopsEnvVarKeys = mkOption {
       type = types.attrsOf types.str;
       default = { };
-      internal = true;
-    };
-    finalBeatConfig = mkOption {
-      type = types.listOf atypes.beatScheduleType;
-      default = [ ];
       internal = true;
     };
   };

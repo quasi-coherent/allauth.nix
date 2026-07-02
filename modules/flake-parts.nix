@@ -47,7 +47,7 @@ in
 
   flake = {
     lib = {
-      inherit (alib) mkAllAuthCli overrides;
+      inherit (alib) overrides;
       inherit mkAllAuthVenv mkAllAuthShell;
     };
 

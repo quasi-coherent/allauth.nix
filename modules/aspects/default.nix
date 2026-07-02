@@ -86,23 +86,20 @@ in
       dbName = "${config.projectName}_db";
 
       # Static (non-secret) environment variables.
-      staticEnv =
-        cfg.app.finalStaticEnvVars
-        // {
-          AA_SITE_NAME = cfg.app.siteName;
-          AA_SITE_URL = cfg.app.siteUrl;
-          AA_STATIC_ROOT = "${config.webDir}/static";
-          AA_LOG_DIR = "${config.projectDir}/log";
-          AA_DB_NAME = config.dbName;
-          AA_DB_USER = config.user;
-          AA_DEBUG = if cfg.app.debug then "True" else "False";
-          AA_EXTRA_INSTALLED_APPS = lib.concatStringsSep "," cfg.app.finalInstalledApps;
-        }
-        // lib.optionalAttrs (cfg.app.finalBeatConfig != [ ]) {
-          AA_BEAT_JSON = builtins.toJSON cfg.app.finalBeatConfig;
-        };
+      # These are required by `allauth-lib`, declared without user involvement.
+      staticEnv = cfg.app.finalStaticEnvVars // {
+        DJANGO_SETTINGS_MODULE = cfg.app.settingsModule;
+        AA_PROJECT_DIR = config.projectDir;
+        AA_SITE_NAME = cfg.app.siteName;
+        AA_SITE_URL = cfg.app.siteUrl;
+        AA_STATIC_ROOT = "${config.webDir}/static";
+        AA_LOG_DIR = "${config.projectDir}/log";
+        AA_DB_NAME = config.dbName;
+        AA_DB_USER = config.user;
+        AA_DEBUG = if cfg.app.debug then "True" else "False";
+      };
 
-      # Mapping of environment variable -> sops key.
+      # Same but for secret values.
       sopsEnv = cfg.app.finalSopsEnvVarKeys // {
         SECRET_KEY = "secret_key";
         ESI_SSO_CLIENT_ID = "esi_sso_client_id";

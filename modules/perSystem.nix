@@ -35,6 +35,7 @@ let
           pkgs.nixd
           pkgs.python314Packages.ruff
           pkgs.python314Packages.python-lsp-ruff
+          pkgs.uv
         ];
       };
 
