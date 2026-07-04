@@ -3,7 +3,7 @@ from celery.app import trace
 
 from django.conf import settings
 
-app = Celery("allauth_lib")
+app = Celery("allauth")
 
 # Read configuration from the active Django settings.  This happens lazily, so
 # we're OK--by the time a celery worker is created, the django settings have

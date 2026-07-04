@@ -43,8 +43,8 @@ in
         configured `AllianceAuthApp`:
 
         ```python
-        from allauth_lib.settings import *
-        from allauth_lib import AllianceAuthApp
+        from allauth.settings import *
+        from allauth import AllianceAuthApp
 
         app = AllianceAuthApp(name = "My Auth")
         # ...app.var / add_plugin / add_service / celery_conf...
@@ -54,13 +54,13 @@ in
     };
     siteName = mkOption {
       type = types.str;
-      default = "Alliance Auth";
+      default = "My Auth";
       description = "SITE_NAME shown in the UI.";
     };
     siteUrl = mkOption {
       type = types.str;
       default = "";
-      example = "https://auth.allauth.space";
+      example = "https://myauth.allauth.space";
       description = "Base URL";
     };
     debug = mkOption {

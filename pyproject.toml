@@ -1,16 +1,16 @@
 [project]
-name = "allauth_lib"
+name = "allauth"
 version = "0.1.0"
 description = "Alliance auth configuration library"
 requires-python = ">=3.10,<3.15"
 dependencies = ["allianceauth==5.1.4", "celery>5.6,<6", "gunicorn>23"]
 
 [project.scripts]
-aa = "allauth_lib.runner:main"
+aa = "allauth.runner:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/allauth_lib"]
+packages = ["src/allauth"]

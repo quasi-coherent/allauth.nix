@@ -35,5 +35,5 @@ in
     ;
   # The bare project package (no virtualenv) to layer over from downstream
   # consumers of this flake.
-  allauth = fileset."allauth-lib";
+  allauth = fileset."allauth";
 }

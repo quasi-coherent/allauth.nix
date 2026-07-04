@@ -4,8 +4,8 @@ import os
 import sys
 
 # We own celery/wsgi app name.
-CELERY_APP = "allauth_lib"
-WSGI_APP = "allauth_lib.wsgi"
+CELERY_APP = "allauth"
+WSGI_APP = "allauth.wsgi"
 
 
 class Runner:

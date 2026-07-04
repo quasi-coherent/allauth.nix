@@ -41,7 +41,7 @@ wheels = [
 ]
 
 [[package]]
-name = "allauth-lib"
+name = "allauth"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

@@ -28,7 +28,7 @@ let
         inherit (cfg) workspaceRoot;
       }).allauth-venv;
 
-  # The venv ships the `aa` console-script (allauth_lib.runner:main).
+  # The venv ships the `aa` console-script (allauth.runner:main).
   mkCli = pkgs: "${mkPackage pkgs}/bin/aa";
 in
 {
