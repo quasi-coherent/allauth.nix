@@ -15,19 +15,14 @@ let
         name = "fmtt";
         text = ''${lib.getExe self'.formatter} "$@"'';
       };
-      venv = self.lib.mkAllAuthVenv {
-        inherit pkgs;
-        workspaceRoot = ../.;
-      };
       mkAllAuthShell = self.lib.mkAllAuthShell {
         inherit pkgs;
-        inherit (venv) allauth-venv fileset;
+        workspaceRoot = ../.;
       };
     in
     {
       devShells.default = mkAllAuthShell {
         shellHook = "unset PYTHONPATH";
-
         packages = [
           fmtt
           pkgs.git

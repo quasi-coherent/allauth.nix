@@ -1,11 +1,7 @@
-from __future__ import annotations
-
 import os
 import sys
 
-# We own celery/wsgi app name.
-CELERY_APP = "allauth"
-WSGI_APP = "allauth.wsgi"
+from .defaults import _CELERY_APP, _WSGI_APP
 
 
 class Runner:
@@ -40,7 +36,7 @@ class Runner:
         self._exec(
             "celery",
             "-A",
-            CELERY_APP,
+            _CELERY_APP,
             "worker",
             "--pool=threads",
             f"--concurrency={self._worker_concurrency}",
@@ -52,7 +48,7 @@ class Runner:
         self._exec(
             "celery",
             "-A",
-            CELERY_APP,
+            _CELERY_APP,
             "worker",
             "--pool=threads",
             "--concurrency=1",
@@ -63,12 +59,12 @@ class Runner:
         )
 
     def celery_scheduler(self, *args: str) -> None:
-        self._exec("celery", "-A", CELERY_APP, "beat", *args)
+        self._exec("celery", "-A", _CELERY_APP, "beat", *args)
 
     def web(self, *args: str) -> None:
         self._exec(
             "gunicorn",
-            WSGI_APP,
+            _WSGI_APP,
             f"--workers={self._web_workers}",
             "--timeout",
             "120",

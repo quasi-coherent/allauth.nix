@@ -1,14 +1,12 @@
 {
-  aa,
   config,
   den,
-  inputs,
+  self,
   ...
 }:
 let
   cfg = config.allauth;
 
-  inherit (import ../lib) mkAllAuthVenv';
   inherit (den.aspects.allauthConfig)
     group
     gunicornSock
@@ -18,27 +16,25 @@ let
     webDir
     ;
 
-  mkPackage =
+  mkCli =
     pkgs:
-    if cfg.app.package != null then
-      cfg.app.package
-    else
-      (mkAllAuthVenv' {
-        inherit inputs pkgs;
-        inherit (cfg) workspaceRoot;
-      }).allauth-venv;
-
-  # The venv ships the `aa` console-script (allauth.runner:main).
-  mkCli = pkgs: "${mkPackage pkgs}/bin/aa";
+    let
+      venv = self.lib.mkAllAuthVenv {
+        inherit pkgs;
+        workspaceRoot = cfg.project.root;
+      };
+      inherit (venv) allauth-venv;
+    in
+    allauth-venv;
 in
 {
   den.aspects.web.includes = [
-    aa.nginx
-    aa.gunicorn
-    aa.celery
+    den.aspects.nginx
+    den.aspects.gunicorn
+    den.aspects.celery
   ];
 
-  aa.nginx = {
+  den.aspects.nginx = {
     firewall.ports = [
       80
       443
@@ -69,14 +65,14 @@ in
       };
   };
 
-  aa.gunicorn.nixos =
+  den.aspects.gunicorn.nixos =
     {
       config,
       pkgs,
       ...
     }:
     let
-      allauth-cli = mkCli pkgs;
+      aa-cli = mkCli pkgs;
     in
     {
       systemd.tmpfiles.rules = [
@@ -109,8 +105,8 @@ in
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           WorkingDirectory = projectDir;
           ExecStart = [
-            "${allauth-cli} migrate"
-            "${allauth-cli} collectstatic"
+            "${aa-cli}/bin/aa migrate"
+            "${aa-cli}/bin/aa collectstatic"
           ];
         };
       };
@@ -127,21 +123,21 @@ in
           Group = group;
           WorkingDirectory = projectDir;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          ExecStart = "${allauth-cli} web";
+          ExecStart = "${aa-cli}/bin/aa web";
           ExecReload = "kill -s HUP $MAINPID";
           Restart = "always";
         };
       };
     };
 
-  aa.celery.nixos =
+  den.aspects.celery.nixos =
     {
       config,
       pkgs,
       ...
     }:
     let
-      allauth-cli = mkCli pkgs;
+      aa-cli = mkCli pkgs;
     in
     {
       systemd.services.celery-worker = {
@@ -158,7 +154,7 @@ in
           Group = group;
           WorkingDirectory = projectDir;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          ExecStart = "${allauth-cli} celery-worker";
+          ExecStart = "${aa-cli}/bin/aa celery-worker";
           Restart = "on-failure";
         };
       };
@@ -176,7 +172,7 @@ in
           User = user;
           Group = group;
           WorkingDirectory = projectDir;
-          ExecStart = "${allauth-cli} celery-services";
+          ExecStart = "${aa-cli}/bin/aa celery-services";
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           Restart = "on-failure";
         };
@@ -195,7 +191,7 @@ in
           User = user;
           Group = group;
           WorkingDirectory = projectDir;
-          ExecStart = "${allauth-cli} celery-scheduler";
+          ExecStart = "${aa-cli}/bin/aa celery-scheduler";
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           Restart = "on-failure";
         };

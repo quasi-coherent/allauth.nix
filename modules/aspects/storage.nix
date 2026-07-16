@@ -1,4 +1,4 @@
-{ aa, den, ... }:
+{ den, ... }:
 let
   inherit (den.aspects.allauthConfig)
     dbName
@@ -9,11 +9,11 @@ let
 in
 {
   den.aspects.storage.includes = [
-    aa.mysql
-    aa.redis
+    den.aspects.mysql
+    den.aspects.redis
   ];
 
-  aa.mysql = {
+  den.aspects.mysql = {
     nixos =
       { pkgs, ... }:
       {
@@ -45,7 +45,7 @@ in
       };
   };
 
-  aa.redis.nixos = {
+  den.aspects.redis.nixos = {
     # It's super confusing how things are named if you call the server something
     # other than "".  With "" everything gets the name "redis".  This is not a
     # very good `services` implementation because this fact is non-obvious and a

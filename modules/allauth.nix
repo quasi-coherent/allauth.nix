@@ -1,130 +1,73 @@
+{ inputs }:
 {
   config,
   den,
-  inputs,
   lib,
   ...
 }:
 let
-  inherit (lib) mkOption types;
   cfg = config.allauth;
 in
 {
   imports = [
-    ./aspects
-    ./options
+    (inputs.import-tree ./aspects)
   ];
 
-  options.allauth = {
-    sops = mkOption {
-      type = with types; attrsOf raw;
-      default = { };
-      description = ''
-        Module options for sops.
+  den.aspects.allauth = {
+    includes = cfg.includes ++ [
+      den.aspects.allauthConfig
+      den.aspects.base
+      den.aspects.storage
+      den.aspects.web
+    ];
 
-        This module expects a sops secrets file and for it to have certain
-        contents depending on what is enabled.
+    nixos =
+      {
+        config,
+        pkgs,
+        ...
+      }:
+      {
+        imports = [ inputs.sops.nixosModules.sops ];
 
-        For example, any AA application needs the ESI SSO client ID and
-        secret, and so these always must be found in the sops secret because
-        this module expects that.
+        environment.systemPackages = [
+          pkgs.age
+          pkgs.emacs30
+          pkgs.fd
+          pkgs.git
+          pkgs.jq
+          pkgs.ripgrep
+          pkgs.sd
+          pkgs.sops
+          pkgs.openssh
+        ];
 
-        Additional plugins and services may have their own set of secret values,
-        which should exist in the file as well if the plugin or service is
-        enabled.
-      '';
-    };
-    fileSystems = mkOption {
-      type = with types; attrsOf raw;
-      default = { };
-      description = ''
-        Configuration for filesystem mountpoints.
-
-        A nixosSystem must have at least the root directory configured to be able
-        to evaluate.  This could be provided indirectly through more elaborate
-        means (e.g., disko) or the plain `fileSystems` option can be defined
-        inline here.
-      '';
-    };
-    systemPackages = mkOption {
-      type = with types; listOf package;
-      default = [ ];
-      description = ''
-        List of packages to install systemwide.
-      '';
-    };
-    includes = mkOption {
-      type = with types; listOf (attrsOf raw);
-      default = [ ];
-      description = ''
-        Additional aspects to include in the final, main aspect.
-      '';
-    };
-    workspaceRoot = mkOption {
-      type = with types; either str path;
-      default = ../.;
-      description = ''
-        Root of the uv workspace used to build the runtime virtualenv.  Defaults
-        to this flake's own uv workspace.  Non-default is expected to depend on
-        the `allauth` Python package, or otherwise must ensure the resulting env
-        can execute the subcommands of the `aa` CLI.
-      '';
-    };
-  };
-
-  config = {
-    den.aspects.allauth = {
-      includes = [
-        den.aspects.allauthConfig
-        den.aspects.base
-        den.aspects.storage
-        den.aspects.web
-      ]
-      ++ cfg.includes;
-
-      nixos =
-        {
-          config,
-          pkgs,
-          ...
-        }:
-        {
-          imports = [
-            inputs.sops.nixosModules.sops
-          ];
-
-          environment.systemPackages = cfg.systemPackages ++ [
-            pkgs.age
-            pkgs.emacs30
-            pkgs.fd
-            pkgs.git
-            pkgs.jq
-            pkgs.ripgrep
-            pkgs.sd
-            pkgs.sops
-            pkgs.openssh
-          ];
-
-          fileSystems = lib.mkIf (cfg.fileSystems != { }) {
-            inherit (cfg) fileSystems;
+        # Without this the config fails to evaluate.
+        fileSystems = lib.mkDefault {
+          "/" = {
+            device = "none";
+            fsType = "tmpfs";
           };
-
-          sops =
-            let
-              env = den.aspects.allauthConfig.sopsEnv;
-              # Values in the attrset `env` are the sops keys.
-              secrets = lib.genAttrs (lib.attrValues env) (_: { });
-              # One env file rendered into tmpfs owned by the service user.
-              templates."allauth-secrets" = {
-                owner = den.aspects.allauthConfig.user;
-                path = "/run/secrets/allauth-secrets";
-                content = lib.concatLines (
-                  lib.mapAttrsToList (env: secret: "${env}=${config.sops.placeholder.${secret}}") env
-                );
-              };
-            in
-            cfg.sops // { inherit secrets templates; };
         };
-    };
+
+        sops =
+          let
+            env = den.aspects.allauthConfig.sopsEnv;
+
+            # To make, e.g., `sops.secrets = { some_secret = { }; };`:
+            secrets = lib.genAttrs (lib.attrValues env) (_: { });
+
+            templates."allauth-secrets" = {
+              owner = den.aspects.allauthConfig.user;
+              path = "/run/secrets/allauth-secrets";
+              content = lib.concatLines (
+                lib.mapAttrsToList (env: secret: "${env}=${config.sops.placeholder.${secret}}") env
+              );
+            };
+          in
+          {
+            inherit secrets templates;
+          };
+      };
   };
 }

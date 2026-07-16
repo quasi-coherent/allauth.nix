@@ -1,15 +1,16 @@
-{ aa, den, ... }:
+{ den, ... }:
 let
   inherit (den.aspects.allauthConfig) user group;
 in
 {
   den.aspects.base.includes = [
-    aa.network
-    aa.ssh
-    aa.user
+    den.aspects.filesystem
+    den.aspects.network
+    den.aspects.ssh
+    den.aspects.user
   ];
 
-  aa.network.nixos =
+  den.aspects.network.nixos =
     {
       firewall,
       lib,
@@ -21,7 +22,7 @@ in
       networking.firewall.allowedTCPPorts = lib.concatMap (f: f.ports or [ ]) firewall;
     };
 
-  aa.user.nixos =
+  den.aspects.user.nixos =
     { pkgs, ... }:
     {
       # Defines the user ${project}-admin
@@ -35,7 +36,7 @@ in
       users.groups.${group} = { };
     };
 
-  aa.ssh.nixos = {
+  den.aspects.ssh.nixos = {
     # TODO: deployment/admin config.
     services.openssh.enable = true;
   };

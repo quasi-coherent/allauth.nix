@@ -1,29 +1,19 @@
 {
+  inputs,
   self,
   ...
 }:
 let
-  alib = import ./lib;
+  alib = import ./lib { inherit inputs; };
 
-  mkAllAuthVenv =
-    {
-      pkgs,
-      workspaceRoot,
-    }:
-    alib.mkAllAuthVenv' {
-      inherit (self) inputs;
-      inherit pkgs workspaceRoot;
-    };
-
-  mkAllAuthShell =
-    {
-      pkgs,
-      allauth-venv,
-      fileset,
-    }:
-    alib.mkAllAuthShell' {
-      inherit pkgs allauth-venv fileset;
-    };
+  allauthModule = {
+    imports = [
+      (import ./allauth.nix { inherit inputs; })
+      (import ./modules/venv.nix { inherit alib; })
+      ./options.nix
+      inputs.den.flakeModules.default
+    ];
+  };
 in
 {
   systems = [
@@ -33,29 +23,22 @@ in
     "x86_64-linux"
   ];
 
-  perSystem =
-    { pkgs, ... }:
-    let
-      venv = mkAllAuthVenv {
-        inherit pkgs;
-        workspaceRoot = ../.;
-      };
-    in
-    {
-      packages = { inherit (venv) allauth; };
-    };
-
   flake = {
     lib = {
-      inherit (alib) overrides;
-      inherit mkAllAuthVenv mkAllAuthShell;
+      inherit (alib)
+        mkAllAuthVenv
+        mkAllAuthShell
+        ;
     };
 
     overlays.default = alib.overrides;
 
     flakeModules = {
-      default = self.flakeModules.allauth;
-      allauth.imports = [ ./allauth.nix ];
+      default = self.flakeModules.den;
+      den.imports = [
+        ./modules/den.nix
+        allauthModule
+      ];
     };
   };
 }

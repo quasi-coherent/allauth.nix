@@ -1,20 +1,9 @@
+{ inputs }:
 let
   overrides = pkgs: pkgs.callPackage ./overrides.nix { };
 
-  types = { lib }: {
-    mkModuleOption =
-      pyMod:
-      lib.mkOption {
-        type = lib.types.str;
-        default = pyMod;
-        description = "AA module path ${pyMod}.";
-        readOnly = true;
-      };
-  };
-
-  mkAllAuthVenv' =
+  mkAllAuthVenv =
     {
-      inputs,
       pkgs,
       workspaceRoot,
     }:
@@ -36,19 +25,21 @@ let
         ;
     };
 
-  mkAllAuthShell' =
+  mkAllAuthShell =
     {
       pkgs,
-      allauth-venv,
-      fileset,
+      workspaceRoot,
     }:
-    pkgs.callPackage ./devShell.nix { inherit allauth-venv fileset; };
+    let
+      venv = mkAllAuthVenv {
+        inherit
+          pkgs
+          workspaceRoot
+          ;
+      };
+    in
+    pkgs.callPackage ./devShell.nix { inherit (venv) allauth-venv fileset; };
 in
 {
-  inherit
-    mkAllAuthVenv'
-    mkAllAuthShell'
-    overrides
-    types
-    ;
+  inherit overrides mkAllAuthShell mkAllAuthVenv;
 }

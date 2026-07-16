@@ -9,7 +9,7 @@
 let
   builderOverlay = pyproject-build.overlays.default;
 
-  # Avoid building binaries.
+  # Download binary wheels whenever possible.
   wheels = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
   # Build fix-ups for allauth's dependency closure.
@@ -35,5 +35,5 @@ in
     ;
   # The bare project package (no virtualenv) to layer over from downstream
   # consumers of this flake.
-  allauth = fileset."allauth";
+  allauth = fileset.allauth;
 }

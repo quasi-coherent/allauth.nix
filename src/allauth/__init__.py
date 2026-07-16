@@ -1,11 +1,24 @@
-from __future__ import annotations
-from celery.schedules import BaseSchedule
-from datetime import timedelta
-from typing import Any
-from urllib.parse import urlparse
 import os
 
+from dataclasses import dataclass
+from typing import Any, Self
+
+from .addons import AppPlugin
+from .defaults import _var_defaults, _CELERY_CONF_DEFAULTS
+
+# Import for side effect.
+#
+# This is because AA define their tasks with `@shared_task`, which binds to
+# whatever Celery app is current _at call time_.  So importing it here ensures
+# the app exists in every process, as downstream will have a top level that does
+# `from allauth import AllianceAuthApp`.
 from .celery import app as celery_app  # noqa: F401
+
+__all__ = [
+    "AllAuth",
+    "AppPlugin",
+    "SiteConfig",
+]
 
 
 def _apply_runtime_env(ns: dict[str, Any]) -> list[str]:
@@ -17,8 +30,8 @@ def _apply_runtime_env(ns: dict[str, Any]) -> list[str]:
         ns["STATICFILES_DIRS"] = []
         exported += ["STATIC_ROOT", "STATICFILES_DIRS"]
 
-    # BASE_DIR is in the nix store, so we can't write log files there, so we
-    # have to re-point all loggers.
+    # The venv is in the nix store, so we can't write log files there, which is
+    # the default.  Need to re-point all the logger handles accordingly.
     log_dir = os.environ.get("AA_LOG_DIR")
     if log_dir is not None:
         for handler in ns.get("LOGGING", {}).get("handlers", {}).values():
@@ -47,104 +60,86 @@ def _apply_runtime_env(ns: dict[str, Any]) -> list[str]:
     return exported
 
 
-class _DefaultVars:
-    def __init__(self, name: str) -> None:
-        self._variables: dict[str, Any] = {
-            "DEBUG": os.environ.get("AA_DEBUG", "False") == "True",
-            "SITE_NAME": name,
-            "SITE_URL": os.environ["AA_SITE_URL"],
-            "ROOT_URLCONF": "allauth.urls",
-            "WSGI_APPLICATION": "allauth.wsgi.application",
-            "ALLOWED_HOSTS": [urlparse(os.environ["AA_SITE_URL"]).hostname],
-            "CSRF_TRUSTED_ORIGINS": [os.environ["AA_SITE_URL"]],
-            "SECRET_KEY": os.environ["SECRET_KEY"],
-            "ESI_SSO_CLIENT_ID": os.environ["ESI_SSO_CLIENT_ID"],
-            "ESI_SSO_CLIENT_SECRET": os.environ["ESI_SSO_CLIENT_SECRET"],
-            "ESI_USER_CONTACT_EMAIL": os.environ.get("ESI_USER_CONTACT_EMAIL", ""),
-        }
-        # The Alliance Auth project template sets these defaults.
-        # See https://gitlab.com/allianceauth/allianceauth/-/blob/4c67e51469415078cde577e84b8bdffa5cb83616/allianceauth/project_template/project_name/celery.py
-        self._celery_conf: dict[str, Any] = {
-            "broker_connection_retry_on_startup": True,
-            "worker_soft_shutdown_timeout": 300,
-            "worker_enable_soft_shutdown_on_idle": True,
-            "broker_transport_options": {
-                "priority_steps": list(range(10)),
-                "queue_order_strategy": "priority",
-            },
-            "task_default_priority": 5,
-            "worker_prefetch_multiplier": 1,
-            "worker_eta_task_limit": 100,
-            "ONCE": {
-                "backend": "allianceauth.services.tasks.DjangoBackend",
-                "settings": {},
-            },
-            "task_routes": {
-                "discord.*": {"queue": "services"},
-            },
-        }
+@dataclass
+class SiteConfig:
+    """
+    Basic required project configuration.
+
+    :site_name: Name displayed in page titles and site header.
+    :site_url: The webside URL.
+    """
+
+    site_name: str = "Alliance Auth"
+    site_url: str = "https://example.com"
 
 
-class AllianceAuthApp(_DefaultVars):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+class AllAuth:
+    def __init__(self, config: SiteConfig) -> None:
+
+        self._variables: dict[str, Any] = _var_defaults(
+            config.site_name, config.site_url
+        )
+        self._celery_conf: dict[str, Any] = _CELERY_CONF_DEFAULTS
         self._installed_apps: list[str] = []
         self._beat_schedule: dict[str, dict[str, Any]] = {}
 
-    def var(self, *, name: str, value: Any) -> AllianceAuthApp:
+    def var(self, *, name: str, value: Any) -> Self:
         """
         Sets a variable to a value.
 
-        Arguments:
-            name (str): The Python identifier for the value.  This should be in
-                SCREAMING_SNAKE_CASE if the AA Django app is the intended
-                consumer, as Django ignores variables named in another format.
-            value (Any): The value to assign to this variable.
+        :name: The Python identifier for the value.  This should be in
+               SCREAMING_SNAKE_CASE if the AA Django app is the intended
+               consumer, as Django ignores variables named in another format.
+        :value: The value to assign to this variable.
         """
         self._variables[name] = value
         return self
 
-    def add_plugin(self, *, module: str) -> AllianceAuthApp:
-        """Adds a plugin app to install.
-
-        Arguments:
-            module (str): The module path to the plugin app, e.g.,
-                `"allianceauth.eveonline.autogroups`.
+    def vars(self, vars: dict[str, Any]) -> Self:
         """
-        self._installed_apps.append(module)
+        Sets a collection of variables' values.
+
+        :vars: Map of (name, value).
+        """
+        for k, v in vars.items():
+            self.var(k, v)
         return self
 
-    def add_service(
-        self, *, key: str, module: str, schedule: int | float | timedelta | BaseSchedule
-    ) -> AllianceAuthApp:
+    def with_plugin(self, plugin: AppPlugin) -> Self:
         """
-        Adds a service to the AA app.
+        Adds a plugin app to install.
 
-        Arguments:
-            key (str): Unique ID for the schedule entry for the service.
-            module (str): The module path to the service.
-            schedule: Celery beat schedule for the service.
+        :plugin: An `AppPlugin` config.
         """
-        self._installed_apps.append(module)
-        self._beat_schedule[key] = {"task": module, "schedule": schedule}
+        self._installed_apps.append(plugin.module)
+        self.vars(plugin.vars)
+        if plugin.schedule:
+            self._beat_schedule |= plugin.schedule
         return self
 
-    def celery_conf(self, *, key: str, value: Any) -> AllianceAuthApp:
+    def with_plugins(self, plugins: list[AppPlugin]) -> Self:
+        """
+        Adds multiple plugin apps to install.
+
+        :plugins: A list of `AppPlugin` configs.
+        """
+        for p in plugins:
+            self.with_plugin(p)
+        return self
+
+    def celery_conf(self, *, key: str, value: Any) -> Self:
         """Add a setting in the celery app for AA.
 
-        Arguments:
-            key (str): The conf key name.
-            value (Any): The value.
+        :key: The conf key name.
+        :value: The value.
         """
         self._celery_conf[key] = value
         return self
 
-    def celery_conf_multi(
-        self, *mappings: dict[str, Any], **kwargs: Any
-    ) -> AllianceAuthApp:
+    def celery_conf_multi(self, *kvs: dict[str, Any], **kwargs: Any) -> Self:
         """Add multiple settings in the celery app for AA."""
-        for m in mappings:
-            self._celery_conf.update(m)
+        for kv in kvs:
+            self._celery_conf.update(kv)
         self._celery_conf.update(kwargs)
         return self
 
@@ -160,10 +155,9 @@ class AllianceAuthApp(_DefaultVars):
         Note that this will exclude all other module namespace members from a
         wildcard import.  Use a named import if needed.
 
-        Arguments:
-            namespace (dict[str, Any]): A module namespace to "install" this
-                instance's variables into.  Intended to be called with the value
-                `globals()` at the end of the file where this app is configured.
+        :namespace: A module namespace to "install" this instance's variables into.
+                    Intended to be called with the value `globals()` at the end of
+                    the file where this app is configured.
         """
         ns = namespace
         exported: list[str] = []

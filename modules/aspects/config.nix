@@ -1,22 +1,13 @@
 {
   config,
-  inputs,
   lib,
   ...
 }:
 let
   inherit (lib) mkOption types;
-  cfg = config.allauth;
+  cfg = config.allauth.project;
 in
 {
-  imports = [
-    (inputs.den.namespace "aa" true)
-    ./web.nix
-    ./base.nix
-    ./den.nix
-    ./storage.nix
-  ];
-
   # Aspect to gather project values and constants shared throughout the
   # configuration.
   #
@@ -78,33 +69,23 @@ in
         }
       ];
 
-      projectName = cfg.app.projectName;
+      projectName = cfg.name;
       projectDir = "/var/lib/allauth/${config.projectName}";
       webDir = "/var/www/${config.projectName}";
       user = "${config.projectName}-admin";
       group = "${config.projectName}-admins";
       dbName = "${config.projectName}_db";
 
-      # Static (non-secret) environment variables.
-      # These are required by `allauth-lib`, declared without user involvement.
-      staticEnv = cfg.app.finalStaticEnvVars // {
-        DJANGO_SETTINGS_MODULE = cfg.app.settingsModule;
+      # Environment variables.
+      sopsEnv = cfg.sopsEnvVars;
+      staticEnv = cfg.staticEnvVars // {
+        DJANGO_SETTINGS_MODULE = cfg.settingsModule;
         AA_PROJECT_DIR = config.projectDir;
-        AA_SITE_NAME = cfg.app.siteName;
-        AA_SITE_URL = cfg.app.siteUrl;
         AA_STATIC_ROOT = "${config.webDir}/static";
         AA_LOG_DIR = "${config.projectDir}/log";
         AA_DB_NAME = config.dbName;
         AA_DB_USER = config.user;
-        AA_DEBUG = if cfg.app.debug then "True" else "False";
-      };
-
-      # Same but for secret values.
-      sopsEnv = cfg.app.finalSopsEnvVarKeys // {
-        SECRET_KEY = "secret_key";
-        ESI_SSO_CLIENT_ID = "esi_sso_client_id";
-        ESI_SSO_CLIENT_SECRET = "esi_sso_client_secret";
-        ESI_USER_CONTACT_EMAIL = "esi_user_contact_email";
+        AA_DEBUG = if cfg.debug then "True" else "False";
       };
     };
 }
