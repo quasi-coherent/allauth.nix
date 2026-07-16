@@ -39,7 +39,7 @@ in
           inherit mkPerSystemOption;
           localFlake = self;
         })
-        (importApply ./host.nix { localFlake = self; })
+        (importApply ./host.nix self)
       ];
     };
   };
