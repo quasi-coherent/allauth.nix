@@ -1,6 +1,5 @@
 {
   flake-parts-lib,
-  inputs,
   lib,
   self,
   ...
@@ -19,9 +18,9 @@ in
   flake = {
     lib =
       {
-        pyproject ? inputs.pyproject,
-        pyproject-build ? inputs.pyproject-build,
-        uv2nix ? inputs.uv2nix,
+        pyproject ? self.inputs.pyproject,
+        pyproject-build ? self.inputs.pyproject-build,
+        uv2nix ? self.inputs.uv2nix,
       }:
       import ./app/lib.nix {
         inherit
