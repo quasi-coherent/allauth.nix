@@ -1,40 +1,6 @@
+{ ... }:
 {
-  config,
-  den,
-  self,
-  ...
-}:
-let
-  cfg = config.allauth;
-
-  inherit (den.aspects.allauthConfig)
-    group
-    gunicornSock
-    projectDir
-    staticEnv
-    user
-    webDir
-    ;
-
-  mkCli =
-    pkgs:
-    let
-      venv = self.lib.mkAllAuthVenv {
-        inherit pkgs;
-        workspaceRoot = cfg.project.root;
-      };
-      inherit (venv) allauth-venv;
-    in
-    allauth-venv;
-in
-{
-  den.aspects.web.includes = [
-    den.aspects.nginx
-    den.aspects.gunicorn
-    den.aspects.celery
-  ];
-
-  den.aspects.nginx = {
+  aa.nginx = {
     firewall.ports = [
       80
       443
@@ -42,6 +8,9 @@ in
 
     nixos =
       { config, ... }:
+      let
+        conf = config.allauth-conf;
+      in
       {
         services.nginx = {
           enable = true;
@@ -51,44 +20,44 @@ in
 
           virtualHosts.${config.networking.hostName} = {
             default = true;
-            locations."/static/".alias = "${webDir}/static";
-            locations."/media/".alias = "${webDir}/media";
+            locations."/static/".alias = "${conf.webDir}/static";
+            locations."/media/".alias = "${conf.webDir}/media";
             # Proxy everything else to gunicorn.
-            locations."/".proxyPass = "http://unix:${gunicornSock}";
+            locations."/".proxyPass = "http://unix:${conf.gunicornSock}";
           };
         };
 
         # The nginx user needs to read/write to the socket file for gunicorn.
         # The easiest way to do that is put nginx in the group that owns that
         # directory.
-        users.users.nginx.extraGroups = [ group ];
+        users.users.nginx.extraGroups = [ conf.group ];
       };
   };
 
-  den.aspects.gunicorn.nixos =
+  aa.gunicorn.nixos =
     {
+      aa-cli,
       config,
-      pkgs,
       ...
     }:
     let
-      aa-cli = mkCli pkgs;
+      conf = config.allauth-conf;
     in
     {
       systemd.tmpfiles.rules = [
-        "d ${webDir}/media   0750 ${user} ${group} -"
-        "d ${webDir}/static  0750 ${user} ${group} -"
-        "d ${projectDir}     0750 ${user} ${group} -"
-        "d ${projectDir}/log 0750 ${user} ${group} -"
+        "d ${conf.webDir}/media   0750 ${conf.user} ${conf.group} -"
+        "d ${conf.webDir}/static  0750 ${conf.user} ${conf.group} -"
+        "d ${conf.projectDir}     0750 ${conf.user} ${conf.group} -"
+        "d ${conf.projectDir}/log 0750 ${conf.user} ${conf.group} -"
       ];
 
       systemd.sockets.gunicorn = {
         description = "Unix socket for AA gunicorn server";
         wantedBy = [ "sockets.target" ];
         socketConfig = {
-          ListenStream = gunicornSock;
-          SocketUser = user;
-          SocketGroup = group;
+          ListenStream = conf.gunicornSock;
+          SocketUser = conf.user;
+          SocketGroup = conf.group;
         };
       };
 
@@ -96,17 +65,17 @@ in
         description = "Initialization tasks for the AA app";
         requiredBy = [ "gunicorn.service" ];
         before = [ "gunicorn.service" ];
-        environment = staticEnv;
+        environment = conf.staticEnv;
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
-          User = user;
-          Group = group;
+          User = conf.user;
+          Group = conf.group;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          WorkingDirectory = projectDir;
+          WorkingDirectory = conf.projectDir;
           ExecStart = [
-            "${aa-cli}/bin/aa migrate"
-            "${aa-cli}/bin/aa collectstatic"
+            "${aa-cli} migrate"
+            "${aa-cli} collectstatic"
           ];
         };
       };
@@ -116,28 +85,28 @@ in
         requires = [ "gunicorn.socket" ];
         after = [ "network.target" ];
         wantedBy = [ "multi-user.target" ];
-        environment = staticEnv;
+        environment = config.allauth.staticEnv;
         serviceConfig = {
           Type = "notify";
-          User = user;
-          Group = group;
-          WorkingDirectory = projectDir;
+          User = conf.user;
+          Group = conf.group;
+          WorkingDirectory = conf.projectDir;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          ExecStart = "${aa-cli}/bin/aa web";
+          ExecStart = "${aa-cli} web";
           ExecReload = "kill -s HUP $MAINPID";
           Restart = "always";
         };
       };
     };
 
-  den.aspects.celery.nixos =
+  aa.celery.nixos =
     {
+      aa-cli,
       config,
-      pkgs,
       ...
     }:
     let
-      aa-cli = mkCli pkgs;
+      conf = config.allauth-conf;
     in
     {
       systemd.services.celery-worker = {
@@ -148,13 +117,13 @@ in
           "allauth-init.service"
         ];
         requires = [ "allauth-init.service" ];
-        environment = staticEnv;
+        environment = conf.staticEnv;
         serviceConfig = {
-          User = user;
-          Group = group;
-          WorkingDirectory = projectDir;
+          User = conf.user;
+          Group = conf.group;
+          WorkingDirectory = conf.projectDir;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          ExecStart = "${aa-cli}/bin/aa celery-worker";
+          ExecStart = "${aa-cli} celery-worker";
           Restart = "on-failure";
         };
       };
@@ -167,12 +136,12 @@ in
           "allauth-init.service"
         ];
         requires = [ "allauth-init.service" ];
-        environment = staticEnv;
+        environment = conf.staticEnv;
         serviceConfig = {
-          User = user;
-          Group = group;
-          WorkingDirectory = projectDir;
-          ExecStart = "${aa-cli}/bin/aa celery-services";
+          User = conf.user;
+          Group = conf.group;
+          WorkingDirectory = conf.projectDir;
+          ExecStart = "${aa-cli} celery-services";
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           Restart = "on-failure";
         };
@@ -186,12 +155,12 @@ in
           "allauth-init.service"
         ];
         requires = [ "allauth-init.service" ];
-        environment = staticEnv;
+        environment = conf.staticEnv;
         serviceConfig = {
-          User = user;
-          Group = group;
-          WorkingDirectory = projectDir;
-          ExecStart = "${aa-cli}/bin/aa celery-scheduler";
+          User = conf.user;
+          Group = conf.group;
+          WorkingDirectory = conf.projectDir;
+          ExecStart = "${aa-cli} celery-scheduler";
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           Restart = "on-failure";
         };

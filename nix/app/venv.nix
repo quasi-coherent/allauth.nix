@@ -1,5 +1,6 @@
 {
   callPackage,
+  extraOverlays,
   lib,
   pyproject,
   pyproject-build,
@@ -13,17 +14,20 @@ let
   wheels = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
   # Build fix-ups for allauth's dependency closure.
-  pyprojectOverrides = callPackage ./overrides.nix { };
+  pyprojectOverrides = import ./overlay.nix { inherit lib; };
 
   pyProject = callPackage pyproject.build.packages {
     python = python314;
   };
   fileset = pyProject.overrideScope (
-    lib.composeManyExtensions [
-      builderOverlay
-      wheels
-      pyprojectOverrides
-    ]
+    lib.composeManyExtensions (
+      [
+        builderOverlay
+        wheels
+        pyprojectOverrides
+      ]
+      ++ extraOverlays
+    )
   );
   allauth-venv = fileset.mkVirtualEnv "allauth-venv" workspace.deps.default;
 in
@@ -31,9 +35,5 @@ in
   inherit
     fileset
     allauth-venv
-    pyprojectOverrides
     ;
-  # The bare project package (no virtualenv) to layer over from downstream
-  # consumers of this flake.
-  allauth = fileset.allauth;
 }

@@ -12,7 +12,10 @@
   partitions.dev.module = { inputs, ... }: {
     imports = [
       inputs.treefmt-nix.flakeModule
+      inputs.den.flakeModules.default
+      ./aspects
       ./perSystem.nix
+      (inputs.den.namespace "aa" true)
     ];
   };
 }

@@ -1,10 +1,4 @@
-{
-  lib,
-  libmysqlclient,
-  pkg-config,
-  openssl,
-  zlib,
-}:
+{ lib, ... }:
 let
   # Packages that are missing setuptools need to be patched.
   needsSetuptools = [
@@ -29,13 +23,13 @@ final: prev:
   mysqlclient = prev.mysqlclient.overrideAttrs (old: {
     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
       final.setuptools
-      pkg-config
+      final.pkg-config
     ];
     # Non-py dylibs
     buildInputs = (old.buildInputs or [ ]) ++ [
-      libmysqlclient
-      openssl
-      zlib
+      final.libmysqlclient
+      final.openssl
+      final.zlib
     ];
   });
 }

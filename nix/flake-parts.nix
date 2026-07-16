@@ -1,10 +1,12 @@
 {
+  flake-parts-lib,
   inputs,
+  lib,
   self,
   ...
 }:
 let
-  alib = import ./lib { inherit inputs; };
+  inherit (flake-parts-lib) importApply mkPerSystemOption;
 in
 {
   systems = [
@@ -15,26 +17,31 @@ in
   ];
 
   flake = {
-    lib = {
-      inherit (alib)
-        mkAllAuthVenv
-        mkAllAuthShell
-        ;
-    };
+    lib =
+      {
+        pyproject ? inputs.pyproject,
+        pyproject-build ? inputs.pyproject-build,
+        uv2nix ? inputs.uv2nix,
+      }:
+      import ./app/lib.nix {
+        inherit
+          pyproject
+          pyproject-build
+          uv2nix
+          ;
+      };
 
-    overlays.default = alib.overrides;
+    overlays.default = import ./app/overlay.nix { inherit lib; };
 
     flakeModules = {
-      default = self.flakeModules.den;
-      den.imports = [
+      default.imports = [
         ./options.nix
-        ./modules/den.nix
-        inputs.den.flakeModules.default
-        (import ./allauth.nix {
-          inherit (inputs) import-tree;
-          sopsModule = inputs.sops.nixosModules.sops;
+        ./allauth.nix
+        (importApply ./app {
+          inherit mkPerSystemOption;
+          localFlake = self;
         })
-        (import ./modules/venv.nix { inherit alib; })
+        (importApply ./host.nix { localFlake = self; })
       ];
     };
   };
