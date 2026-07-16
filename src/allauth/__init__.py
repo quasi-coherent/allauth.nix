@@ -5,6 +5,7 @@ from typing import Any, Self
 
 from .addons import AppPlugin
 from .defaults import _var_defaults, _CELERY_CONF_DEFAULTS
+from .runner import Runner
 
 # Import for side effect.
 #
@@ -18,6 +19,7 @@ __all__ = [
     "AllAuth",
     "AppPlugin",
     "SiteConfig",
+    "Runner",
 ]
 
 

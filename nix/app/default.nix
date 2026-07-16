@@ -2,7 +2,9 @@
 { config, lib, ... }:
 let
   inherit (lib) mkOption types;
+
   cfg = config.allauth;
+
   aalib = import ./lib.nix {
     inherit (cfg) pyproject pyproject-build uv2nix;
     inherit lib;
@@ -13,18 +15,12 @@ in
     { pkgs, ... }:
     {
       options.allauth = {
-        package = mkOption {
-          type = with types; either package path;
+        workspaceRoot = mkOption {
+          type = types.path;
           default = ../../.;
           description = ''
-            Either a package derivation or path to a uv workspace.
-
-            If a package is provided, then it must expose the binary script `aa`
-            that is exported as `allauth.runner.aa` by the `allauth` dependency.
-
-            In either case, the configured `AllAuth` instance must be installed
-            in the same Python module as what is provided in this flake module's
-            option `allauth.settingsModule`.
+            Path to a uv workspace that imports this project's `allauth` and
+            installs `AllAuth` configuration.
           '';
         };
         uv2nix = mkOption {
@@ -61,18 +57,11 @@ in
 
       config =
         let
-          allauth-venv =
-            if builtins.isPath cfg.package then
-              cfg.package
-            else
-              let
-                venvPkgs = aalib.mkAllAuthPkgs {
-                  inherit pkgs;
-                  workspaceRoot = cfg.package;
-                };
-                inherit (venvPkgs) allauth-venv;
-              in
-              allauth-venv;
+          venvPkgs = aalib.mkAllAuthPkgs {
+            inherit pkgs;
+            inherit (cfg) workspaceRoot;
+          };
+          inherit (venvPkgs) allauth-venv;
         in
         {
           _module.args = {
