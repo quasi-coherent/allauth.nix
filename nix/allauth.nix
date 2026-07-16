@@ -1,8 +1,9 @@
-{ inputs }:
 {
   config,
   den,
   lib,
+  sopsModule,
+  import-tree,
   ...
 }:
 let
@@ -10,7 +11,7 @@ let
 in
 {
   imports = [
-    (inputs.import-tree ./aspects)
+    (import-tree ./aspects)
   ];
 
   den.aspects.allauth = {
@@ -28,7 +29,7 @@ in
         ...
       }:
       {
-        imports = [ inputs.sops.nixosModules.sops ];
+        imports = [ sopsModule ];
 
         environment.systemPackages = [
           pkgs.age

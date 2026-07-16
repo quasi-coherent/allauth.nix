@@ -1,5 +1,9 @@
-{ alib }:
-{ config, pkgs, ... }:
+{
+  alib,
+  config,
+  pkgs,
+  ...
+}:
 let
   cfg = config.allauth.project;
   venv = alib.mkAllAuthVenv {

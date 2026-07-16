@@ -5,15 +5,6 @@
 }:
 let
   alib = import ./lib { inherit inputs; };
-
-  allauthModule = {
-    imports = [
-      (import ./allauth.nix { inherit inputs; })
-      (import ./modules/venv.nix { inherit alib; })
-      ./options.nix
-      inputs.den.flakeModules.default
-    ];
-  };
 in
 {
   systems = [
@@ -36,8 +27,14 @@ in
     flakeModules = {
       default = self.flakeModules.den;
       den.imports = [
+        ./options.nix
         ./modules/den.nix
-        allauthModule
+        inputs.den.flakeModules.default
+        (import ./allauth.nix {
+          inherit (inputs) import-tree;
+          sopsModule = inputs.sops.nixosModules.sops;
+        })
+        (import ./modules/venv.nix { inherit alib; })
       ];
     };
   };
