@@ -17,7 +17,7 @@ in
     name = mkOption {
       type = types.str;
       default = "allauth";
-      description = "Name of the project.";
+      description = "A name that gets assigned to flake outputs.";
     };
     settingsModule = mkOption {
       type = types.str;
@@ -119,9 +119,8 @@ in
     let
       cfg = config.allauth;
       sopsCfg = cfg.sopsConfig;
-      projectName = cfg.name;
-      projectDir = "/var/lib/allauth/${projectName}";
-      webDir = "/var/www/${projectName}";
+      projectDir = "/var/lib/allauth";
+      webDir = "/var/www/allauth";
       user = "aaadmin";
       group = "aaadmin";
       dbName = "allauthdb";
@@ -146,10 +145,11 @@ in
       };
     in
     {
+      allauth.name = cfg.name;
+
       den.schema = {
         host.includes = cfg.includes;
         schema.conf.options.allauth-conf = {
-          projectName = mkDefOption projectName;
           projectDir = mkDefOption projectDir;
           webDir = mkDefOption webDir;
           user = mkDefOption user;

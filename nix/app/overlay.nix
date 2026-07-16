@@ -23,13 +23,13 @@ final: prev:
   mysqlclient = prev.mysqlclient.overrideAttrs (old: {
     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
       final.setuptools
-      final.pkg-config
+      prev.pkg-config
     ];
     # Non-py dylibs
     buildInputs = (old.buildInputs or [ ]) ++ [
-      final.libmysqlclient
-      final.openssl
-      final.zlib
+      prev.libmysqlclient
+      prev.openssl
+      prev.zlib
     ];
   });
 }

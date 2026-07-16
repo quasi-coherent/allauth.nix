@@ -36,7 +36,6 @@ in
     flakeModules = {
       default.imports = [
         ./options.nix
-        ./allauth.nix
         (importApply ./app {
           inherit mkPerSystemOption;
           localFlake = self;
