@@ -5,8 +5,7 @@
   ...
 }:
 let
-  inherit (import ./lib { inherit inputs lib; }) mkApp;
-
+  mkApp = (import ./lib { inherit lib; }).mkApp { inherit inputs; };
   mkDefOption = v: lib.mkOption { default = v; };
 in
 {
@@ -67,12 +66,10 @@ in
     let
       inherit (config.allauth) workspaceRoot app;
       inherit (app) extraOverlays pythonPackage;
-
-      mkApp' = mkApp pkgs;
     in
     {
       _module.args.allauth-bin =
-        (mkApp' {
+        (mkApp pkgs {
           inherit workspaceRoot extraOverlays;
           python = pythonPackage;
         }).allauth-bin;

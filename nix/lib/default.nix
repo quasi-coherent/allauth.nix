@@ -1,14 +1,12 @@
 {
-  inputs,
   lib,
   ...
 }:
 let
-  mkApp = import ./appPkgs.nix { inherit inputs lib; };
-  allauth-lib = {
-    inherit mkApp;
-    mkDenHost = ./den-host.nix;
-    mkNixosSystem = ./nixos-system.nix;
-  };
+  mkApp = { inputs }: import ./appPkgs.nix { inherit inputs lib; };
+  mkDenHost = { config }: import ./den-host.nix { inherit config lib; };
+  mkNixosSystem = { config }: import ./nixos-system.nix { inherit config lib; };
 in
-allauth-lib
+{
+  inherit mkApp mkDenHost mkNixosSystem;
+}

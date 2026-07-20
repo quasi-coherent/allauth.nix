@@ -5,7 +5,7 @@
   ...
 }:
 let
-  allauth-lib = import ./lib { inherit inputs lib; };
+  allauth-lib = import ./lib { inherit lib; };
 in
 {
   systems = [
@@ -17,7 +17,7 @@ in
 
   flake = {
     lib = {
-      inherit (allauth-lib) mkApp;
+      mkApp = allauth-lib.mkApp { inherit inputs; };
     };
 
     flakeModules = {
@@ -31,8 +31,8 @@ in
           ];
 
           build = {
-            denHost = allauth-lib.mkDenHost { inherit config lib; };
-            nixosSystem = allauth-lib.mkNixosSystem { inherit config lib; };
+            denHost = allauth-lib.mkDenHost { inherit config; };
+            nixosSystem = allauth-lib.mkNixosSystem { inherit config; };
           };
         };
     };
