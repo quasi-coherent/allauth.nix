@@ -117,21 +117,25 @@ in
     { pkgs, ... }:
     {
       options.allauth = {
-        app = {
-          pythonPackage = mkOption {
-            type = types.package;
-            default = pkgs.python314;
-            description = ''
-              Python package to use when building the Alliance Auth app.
-            '';
-          };
-          extraOverlays = mkOption {
-            type = with types; listOf raw;
-            default = [ ];
-            description = ''
-              List of additional overlays to pass to the Python fileset builder.
-            '';
-          };
+        pythonPackage = mkOption {
+          type = types.package;
+          default = pkgs.python314;
+          description = ''
+            Python package to use when building the Alliance Auth app.
+          '';
+        };
+        extraOverlays = mkOption {
+          type = with types; listOf raw;
+          default = [ ];
+          description = ''
+            List of additional overlays to pass to the Python fileset builder.
+          '';
+        };
+        targetSystem = mkOption {
+          type = types.str;
+          default = if pkgs.stdenvNoCC.buildPlatform.isAarch then "aarch64-linux" else "x86_64-linux";
+          description = "The architecture of the target system.";
+          readOnly = true;
         };
       };
     }

@@ -7,10 +7,14 @@ let
   inherit (config) den;
 in
 {
+  name,
+  targetSystem ? config.allauth.targetSystem,
   includes ? [ ],
   userAspects ? { },
 }:
 {
-  includes = [ den.aspects.allauth ] ++ includes;
-  users = (lib.mkIf userAspects != { }) userAspects;
+  ${targetSystem}.${name} = {
+    includes = [ den.aspects.allauth ] ++ includes;
+    users = (lib.mkIf userAspects != { }) userAspects;
+  };
 }

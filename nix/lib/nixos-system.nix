@@ -7,11 +7,14 @@ let
   inherit (config) den;
 in
 {
-  targetSystem ? "x86_64-linux",
+  name,
+  targetSystem ? config.allauth.targetSystem,
   specialArgs ? { },
   modules ? [ ],
 }:
-lib.nixosSystem {
-  inherit specialArgs;
-  modules = [ den.hosts.${targetSystem}.allauth.mainModule ] ++ modules;
+{
+  ${name} = lib.nixosSystem {
+    inherit specialArgs;
+    modules = [ den.hosts.${targetSystem}.allauth.mainModule ] ++ modules;
+  };
 }
