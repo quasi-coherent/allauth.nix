@@ -1,9 +1,8 @@
-{ ... }:
-{
-  aa.mysql.nixos =
+_: {
+  den.aspects.mysql.nixos =
     { config, pkgs, ... }:
     let
-      conf = config.allauth-conf;
+      conf = config.allauthConf;
     in
     {
       services = {
@@ -33,10 +32,10 @@
       };
     };
 
-  aa.redis.nixos =
+  den.aspects.redis.nixos =
     { config, ... }:
     let
-      conf = config.allauth-conf;
+      conf = config.allauthConf;
     in
     {
       # It's super confusing how things are named if you call the server something

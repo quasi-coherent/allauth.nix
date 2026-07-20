@@ -1,6 +1,12 @@
-{ lib, ... }:
+{
+  lib,
+  libmysqlclient,
+  openssl,
+  pkg-config,
+  zlib,
+}:
 let
-  # Packages that are missing setuptools need to be patched.
+  # Dependencies of `allianceauth` that are missing setuptools:
   needsSetuptools = [
     "celery-once"
     "slixmpp"
@@ -23,13 +29,13 @@ final: prev:
   mysqlclient = prev.mysqlclient.overrideAttrs (old: {
     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
       final.setuptools
-      prev.pkg-config
+      pkg-config
     ];
     # Non-py dylibs
     buildInputs = (old.buildInputs or [ ]) ++ [
-      prev.libmysqlclient
-      prev.openssl
-      prev.zlib
+      libmysqlclient
+      openssl
+      zlib
     ];
   });
 }

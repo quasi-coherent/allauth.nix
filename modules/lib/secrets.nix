@@ -1,9 +1,9 @@
 { inputs, lib, ... }:
 {
-  aa.secrets.nixos =
+  den.aspects.secrets.nixos =
     { config, ... }:
     let
-      conf = config.allauth-conf;
+      conf = config.allauthConf;
     in
     {
       imports = [ inputs.sops.nixosModules.sops ];
@@ -22,10 +22,13 @@
         in
         {
           inherit secrets templates;
+
           defaultSopsFile = conf.sopsSecretsFile;
-          age.sshKeyPaths = conf.ageSshKeyPaths;
-          age.keyFile = conf.ageKeyFile;
-          age.generateKey = conf.ageGenerateKey;
+          age = {
+            keyFile = conf.ageKeyFile;
+            sshKeyPaths = conf.ageSshKeyPaths;
+            generateKey = conf.ageGenerateKey;
+          };
         };
     };
 }

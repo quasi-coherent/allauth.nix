@@ -29,6 +29,7 @@ aa <command> — Alliance Auth runner
   web              Start the WSGI (gunicorn) application server
 """
 
+
 @dataclass
 class Runner:
     workdir: str | None = os.environ.get("AA_PROJECT_DIR")
@@ -112,5 +113,9 @@ class Runner:
         return 0
 
 
+def main() -> int:
+    return Runner().run()
+
+
 if __name__ == "__main__":
-    raise SystemExit(Runner().run())
+    raise SystemExit(main())

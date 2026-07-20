@@ -1,6 +1,5 @@
-{ ... }:
-{
-  aa.nginx = {
+_: {
+  den.aspects.nginx = {
     firewall.ports = [
       80
       443
@@ -9,7 +8,7 @@
     nixos =
       { config, ... }:
       let
-        conf = config.allauth-conf;
+        conf = config.allauthConf;
       in
       {
         services.nginx = {
@@ -34,14 +33,15 @@
       };
   };
 
-  aa.gunicorn.nixos =
+  den.aspects.gunicorn.nixos =
     {
-      aa-cli,
       config,
+      aalib',
       ...
     }:
     let
-      conf = config.allauth-conf;
+      conf = config.allauthConf;
+      aa-bin = aalib'.mkAllAuthBin { };
     in
     {
       systemd.tmpfiles.rules = [
@@ -74,8 +74,8 @@
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           WorkingDirectory = conf.projectDir;
           ExecStart = [
-            "${aa-cli} migrate"
-            "${aa-cli} collectstatic"
+            "${aa-bin} migrate"
+            "${aa-bin} collectstatic"
           ];
         };
       };
@@ -92,21 +92,22 @@
           Group = conf.group;
           WorkingDirectory = conf.projectDir;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          ExecStart = "${aa-cli} web";
+          ExecStart = "${aa-bin} web";
           ExecReload = "kill -s HUP $MAINPID";
           Restart = "always";
         };
       };
     };
 
-  aa.celery.nixos =
+  den.aspects.celery.nixos =
     {
-      aa-cli,
       config,
+      aalib',
       ...
     }:
     let
-      conf = config.allauth-conf;
+      conf = config.allauthConf;
+      aa-bin = aalib'.mkAllAuthBin { };
     in
     {
       systemd.services.celery-worker = {
@@ -123,7 +124,7 @@
           Group = conf.group;
           WorkingDirectory = conf.projectDir;
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
-          ExecStart = "${aa-cli} celery-worker";
+          ExecStart = "${aa-bin} celery-worker";
           Restart = "on-failure";
         };
       };
@@ -141,7 +142,7 @@
           User = conf.user;
           Group = conf.group;
           WorkingDirectory = conf.projectDir;
-          ExecStart = "${aa-cli} celery-services";
+          ExecStart = "${aa-bin} celery-services";
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           Restart = "on-failure";
         };
@@ -160,7 +161,7 @@
           User = conf.user;
           Group = conf.group;
           WorkingDirectory = conf.projectDir;
-          ExecStart = "${aa-cli} celery-scheduler";
+          ExecStart = "${aa-bin} celery-scheduler";
           EnvironmentFile = config.sops.templates."allauth-secrets".path;
           Restart = "on-failure";
         };

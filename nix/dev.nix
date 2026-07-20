@@ -1,37 +1,32 @@
+{ self, ... }:
 {
-  lib,
-  self,
-  ...
-}:
-let
   perSystem =
     {
+      lib,
       pkgs,
       self',
       ...
     }:
     let
+      appPkgs = self.lib.mkApp pkgs { workspaceRoot = ../.; };
+
       fmtt = pkgs.writeShellApplication {
         name = "fmtt";
         text = ''${lib.getExe self'.formatter} "$@"'';
       };
-      aalib = self.lib { };
-      mkAllAuthShell = aalib.mkAllAuthShell {
-        inherit pkgs;
-        workspaceRoot = ../.;
-      };
+
+      pypkgs = pkgs.python314Packages;
     in
     {
-      devShells.default = mkAllAuthShell {
+      devShells.default = appPkgs.allauthShell {
         shellHook = "unset PYTHONPATH";
         packages = [
           fmtt
-          pkgs.git
           pkgs.nh
           pkgs.nixd
-          pkgs.python314Packages.ruff
-          pkgs.python314Packages.python-lsp-ruff
-          pkgs.uv
+          pypkgs.uv
+          pypkgs.ruff
+          pypkgs.python-lsp-ruff
         ];
       };
 
@@ -49,7 +44,4 @@ let
         ];
       };
     };
-in
-{
-  inherit perSystem;
 }

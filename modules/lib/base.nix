@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  aa.filesystem.nixos = {
+  den.aspects.filesystem.nixos = {
     # Without this the config fails to evaluate.
     fileSystems = lib.mkDefault {
       "/" = {
@@ -10,7 +10,7 @@
     };
   };
 
-  aa.systemEnv.nixos = { pkgs, ... }: {
+  den.aspects.global.nixos = { pkgs, ... }: {
     environment.systemPackages = [
       pkgs.age
       pkgs.emacs30
@@ -24,7 +24,7 @@
     ];
   };
 
-  aa.network.nixos =
+  den.aspects.network.nixos =
     {
       firewall,
       lib,
@@ -36,21 +36,24 @@
       networking.firewall.allowedTCPPorts = lib.concatMap (f: f.ports or [ ]) firewall;
     };
 
-  aa.user.nixos =
+  den.aspects.user.nixos =
     { config, pkgs, ... }:
+    let
+      conf = config.allauthConf;
+    in
     {
       # Defines the user ${project}-admin
-      users.users.${config.user} = {
-        inherit (config) group;
+      users.users.${conf.user} = {
+        inherit (conf) group;
         isSystemUser = true;
         shell = "${pkgs.shadow}/bin/nologin";
       };
 
       # Defines the group ${project}-admins
-      users.groups.${config.group} = { };
+      users.groups.${conf.group} = { };
     };
 
-  aa.ssh.nixos = {
+  den.aspects.ssh.nixos = {
     # TODO: config.
     services.openssh.enable = true;
   };

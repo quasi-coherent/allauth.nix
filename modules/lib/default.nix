@@ -1,6 +1,5 @@
 {
   imports = [
-    ./allauth.nix
     ./base.nix
     ./den.nix
     ./secrets.nix

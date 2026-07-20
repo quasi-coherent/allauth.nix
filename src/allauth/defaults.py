@@ -1,6 +1,6 @@
 import os
-import urlparse
 
+from urllib.parse import urlparse
 from typing import Any
 
 _CELERY_APP = "allauth"
