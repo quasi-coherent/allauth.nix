@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   lib,
   self,
@@ -18,23 +19,16 @@ in
   flake = {
     lib = {
       mkApp = allauth-lib.mkApp { inherit inputs; };
+      denHost = allauth-lib.mkDenHost { inherit config; };
+      nixosSystem = allauth-lib.mkNixosSystem { inherit config; };
     };
 
     flakeModules = {
       default = self.flakeModules.allauth;
 
-      allauth =
-        { config, lib, ... }:
-        {
-          imports = [
-            (import ./allauth.nix { inherit config inputs lib; })
-          ];
-
-          build = {
-            denHost = allauth-lib.mkDenHost { inherit config; };
-            nixosSystem = allauth-lib.mkNixosSystem { inherit config; };
-          };
-        };
+      allauth.imports = [
+        (import ./allauth.nix { inherit config inputs lib; })
+      ];
     };
   };
 }
